@@ -7,6 +7,9 @@
  * option any later version.  See doc/license.txt for details.
  */
 
+#ifndef INTMATH_H
+#define INTMATH_H
+
 ULONG Isqrt(ULONG x);
 
 /*
@@ -55,3 +58,5 @@ static __inline__ WORD mul_div(WORD m1, WORD m2, WORD d1)
 
     return m1;
 }
+
+#endif /* INTMATH_H */
