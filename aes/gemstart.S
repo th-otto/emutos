@@ -102,11 +102,15 @@ aes_restart:
         // clear the 'global memory' zone whose size is determined by
         // routine size_theglo :-)
         jsr     _size_theglo
-        move.l  d0,-(sp)        // size in bytes
         movea.l #_D,a0
+#ifdef __FASTCALL__
+        jsr     _bzero          // clear it
+#else
+        move.l  d0,-(sp)        // size in bytes
         move.l  a0,-(sp)        // address
         jsr     _bzero          // clear it
         addq.l  #8,sp
+#endif
 
         // _drwaddr ??? set to just_rts
         lea     _justretf,a0

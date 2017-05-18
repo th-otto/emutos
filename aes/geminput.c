@@ -39,9 +39,9 @@
 #include "kprint.h"
 
 
-extern void wheel_change(WORD wheel_number, WORD wheel_amount); /* called only from aes/gemdosif.S */
-extern void b_click(WORD state); /* called only from aes/gemdosif.S */
-extern void b_delay(WORD amnt);  /* called only from aes/gemdosif.S */
+extern void __CDECL wheel_change(WORD wheel_number, WORD wheel_amount); /* called only from aes/gemdosif.S */
+extern void __CDECL b_click(WORD state); /* called only from aes/gemdosif.S */
+extern void __CDECL b_delay(WORD amnt);  /* called only from aes/gemdosif.S */
 
 
 #define MB_DOWN 0x01
@@ -116,7 +116,7 @@ static WORD chk_ctrl(WORD mx, WORD my)
  *  Button click code call that is from the button interrupt code
  *  with interrupts off
  */
-void b_click(WORD state)
+void __CDECL b_click(WORD state)
 {
     /* ignore it unless it represents a change */
     if (state != gl_btrue)
@@ -157,7 +157,7 @@ void b_click(WORD state)
  *  Button delay code that is called from the tick interrupt code
  *  with interrupts off
  */
-void b_delay(WORD amnt)
+void __CDECL b_delay(WORD amnt)
 {
     /* see if we have a delay for mouse click in progress */
     if (gl_bdely)
@@ -279,7 +279,7 @@ void evremove(EVB *e, UWORD ret)
 }
 
 
-void kchange(LONG fdata)
+void __CDECL kchange(LONG fdata)
 {
     UWORD ch = HIWORD(fdata);
     WORD kstat = LOWORD(fdata);
@@ -319,7 +319,7 @@ static void chkown(void)
 }
 
 
-void bchange(LONG fdata)
+void __CDECL bchange(LONG fdata)
 {
     WORD new = HIWORD(fdata);
     WORD clicks = LOWORD(fdata);
@@ -351,7 +351,7 @@ WORD downorup(WORD new, LONG buparm)
 }
 
 
-void mchange(LONG fdata)
+void __CDECL mchange(LONG fdata)
 {
     WORD rx = HIWORD(fdata);
     WORD ry = LOWORD(fdata);
@@ -382,7 +382,7 @@ void mchange(LONG fdata)
 
 
 #if CONF_WITH_VDI_EXTENSIONS
-void wheel_change(WORD wheel_number, WORD wheel_amount)
+void __CDECL wheel_change(WORD wheel_number, WORD wheel_amount)
 {
     WORD wh;
     WORD type;

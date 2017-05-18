@@ -43,35 +43,35 @@
  * function prototypes
  */
 #if BCONMAP_AVAILABLE
-static ULONG rsconf_dummy(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr);
+static ULONG __CDECL rsconf_dummy(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr);
 static void init_bconmap(void);
 #endif
 
 #if CONF_WITH_SCC
-static LONG bconstatA(void);
-static LONG bconinA(void);
-static LONG bcostatA(void);
-static LONG bconoutA(WORD,WORD);
-static ULONG rsconfA(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr);
+static LONG __CDECL bconstatA(void);
+static LONG __CDECL bconinA(void);
+static LONG __CDECL bcostatA(void);
+static LONG __CDECL bconoutA(WORD,WORD);
+static ULONG __CDECL rsconfA(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr);
 
-static LONG bconstatB(void);
-static LONG bconinB(void);
-static LONG bcostatB(void);
-static ULONG rsconfB(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr);
+static LONG __CDECL bconstatB(void);
+static LONG __CDECL bconinB(void);
+static LONG __CDECL bcostatB(void);
+static ULONG __CDECL rsconfB(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr);
 #endif  /* CONF_WITH_SCC */
 
 #if CONF_WITH_TT_MFP
-static LONG bconstatTT(void);
-static LONG bconinTT(void);
-static LONG bcostatTT(void);
-static LONG bconoutTT(WORD,WORD);
-static ULONG rsconfTT(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr);
+static LONG __CDECL bconstatTT(void);
+static LONG __CDECL bconinTT(void);
+static LONG __CDECL bcostatTT(void);
+static LONG __CDECL bconoutTT(WORD,WORD);
+static ULONG __CDECL rsconfTT(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr);
 #endif  /* CONF_WITH_TT_MFP */
 
 /*
  * global variables
  */
-ULONG (*rsconfptr)(WORD,WORD,WORD,WORD,WORD,WORD);
+ULONG (__CDECL *rsconfptr)(WORD,WORD,WORD,WORD,WORD,WORD);
 EXT_IOREC *rs232iorecptr;
 
 #if BCONMAP_AVAILABLE
@@ -119,7 +119,7 @@ static const MAPTAB maptable_mfp_tt =
 /*
  * MFP serial port i/o routines
  */
-LONG bconstat1(void)
+LONG __CDECL bconstat1(void)
 {
 #if CONF_SERIAL_CONSOLE
     /* Input from the serial port will be read on interrupt,
@@ -139,7 +139,7 @@ LONG bconstat1(void)
 #endif
 }
 
-LONG bconin1(void)
+LONG __CDECL bconin1(void)
 {
     /* Wait for character at the serial line */
     while(!bconstat1())
@@ -157,7 +157,7 @@ LONG bconin1(void)
 #endif
 }
 
-LONG bcostat1(void)
+LONG __CDECL bcostat1(void)
 {
 #if CONF_WITH_COLDFIRE_RS232
     return coldfire_rs232_can_write() ? -1 : 0;
@@ -171,7 +171,7 @@ LONG bcostat1(void)
 #endif
 }
 
-LONG bconout1(WORD dev, WORD b)
+LONG __CDECL bconout1(WORD dev, WORD b)
 {
     /* Wait for transmit buffer to become empty */
     while(!bcostat1())
@@ -220,7 +220,7 @@ static const struct mfp_rs232_table mfp_rs232_init[] = {
 #endif  /* CONF_WITH_MFP_RS232 */
 
 #if CONF_WITH_MFP || CONF_WITH_TT_MFP
-static ULONG rsconf_mfp(MFP *mfp, EXT_IOREC *iorec, WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
+static ULONG __CDECL rsconf_mfp(MFP *mfp, EXT_IOREC *iorec, WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
 {
     const struct mfp_rs232_table *init;
     ULONG old;
@@ -255,7 +255,7 @@ static ULONG rsconf_mfp(MFP *mfp, EXT_IOREC *iorec, WORD baud, WORD ctrl, WORD u
 }
 #endif
 
-ULONG rsconf1(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
+ULONG __CDECL rsconf1(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
 {
 #if CONF_WITH_MFP_RS232
     return rsconf_mfp(MFP_BASE,&iorec1,baud,ctrl,ucr,rsr,tsr,scr);
@@ -268,7 +268,7 @@ ULONG rsconf1(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
 /*
  * SCC port A i/o routines
  */
-static LONG bconstatA(void)
+static LONG __CDECL bconstatA(void)
 {
 SCC *scc = (SCC *)SCC_BASE;
 LONG rc;
@@ -279,7 +279,7 @@ LONG rc;
     return rc;
 }
 
-static LONG bconinA(void)
+static LONG __CDECL bconinA(void)
 {
 SCC *scc = (SCC *)SCC_BASE;
 LONG data;
@@ -292,7 +292,7 @@ LONG data;
     return data;
 }
 
-static LONG bcostatA(void)
+static LONG __CDECL bcostatA(void)
 {
 SCC *scc = (SCC *)SCC_BASE;
 LONG rc;
@@ -303,7 +303,7 @@ LONG rc;
     return rc;
 }
 
-static LONG bconoutA(WORD dev, WORD b)
+static LONG __CDECL bconoutA(WORD dev, WORD b)
 {
 SCC *scc = (SCC *)SCC_BASE;
 
@@ -318,7 +318,7 @@ SCC *scc = (SCC *)SCC_BASE;
 /*
  * SCC port B i/o routines
  */
-static LONG bconstatB(void)
+static LONG __CDECL bconstatB(void)
 {
 SCC *scc = (SCC *)SCC_BASE;
 LONG rc;
@@ -329,7 +329,7 @@ LONG rc;
     return rc;
 }
 
-static LONG bconinB(void)
+static LONG __CDECL bconinB(void)
 {
 SCC *scc = (SCC *)SCC_BASE;
 LONG data;
@@ -342,7 +342,7 @@ LONG data;
     return data;
 }
 
-static LONG bcostatB(void)
+static LONG __CDECL bcostatB(void)
 {
 SCC *scc = (SCC *)SCC_BASE;
 LONG rc;
@@ -354,7 +354,7 @@ LONG rc;
 }
 
 /* note that bconoutB() is global to support SCC_DEBUG_PRINT */
-LONG bconoutB(WORD dev, WORD b)
+LONG __CDECL bconoutB(WORD dev, WORD b)
 {
 SCC *scc = (SCC *)SCC_BASE;
 
@@ -401,7 +401,7 @@ static void write_scc(PORT *port,UBYTE reg,UBYTE data)
     RECOVERY_DELAY;
 }
 
-static ULONG rsconf_scc(PORT *port,WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
+static ULONG __CDECL rsconf_scc(PORT *port,WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
 {
     ULONG old;
 
@@ -491,14 +491,14 @@ static ULONG rsconf_scc(PORT *port,WORD baud, WORD ctrl, WORD ucr, WORD rsr, WOR
     return old;
 }
 
-static ULONG rsconfA(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
+static ULONG __CDECL rsconfA(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
 {
 SCC *scc = (SCC *)SCC_BASE;
 
     return rsconf_scc(&scc->portA,baud,ctrl,ucr,rsr,tsr,scr);
 }
 
-static ULONG rsconfB(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
+static ULONG __CDECL rsconfB(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
 {
 SCC *scc = (SCC *)SCC_BASE;
 
@@ -564,7 +564,7 @@ ULONG reset_recovery_loops;
 /*
  * TT MFP i/o routines
  */
-static LONG bconstatTT(void)
+static LONG __CDECL bconstatTT(void)
 {
     /* Character available in the serial input buffer? */
     /* FIXME: We ought to use Iorec() for this... */
@@ -574,7 +574,7 @@ static LONG bconstatTT(void)
     return 0L;
 }
 
-static LONG bconinTT(void)
+static LONG __CDECL bconinTT(void)
 {
     /* Wait for character at the serial line */
     while(!bconstatTT())
@@ -585,7 +585,7 @@ static LONG bconinTT(void)
     return (LONG)TT_MFP_BASE->udr;
 }
 
-static LONG bcostatTT(void)
+static LONG __CDECL bcostatTT(void)
 {
     if (TT_MFP_BASE->tsr & 0x80)
         return -1L;
@@ -593,7 +593,7 @@ static LONG bcostatTT(void)
     return 0L;
 }
 
-static LONG bconoutTT(WORD dev, WORD b)
+static LONG __CDECL bconoutTT(WORD dev, WORD b)
 {
     /* Wait for transmit buffer to become empty */
     while(!bcostatTT())
@@ -608,14 +608,14 @@ static LONG bconoutTT(WORD dev, WORD b)
 /*
  * TT Rsconf() routine
  */
-static ULONG rsconfTT(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
+static ULONG __CDECL rsconfTT(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
 {
     return rsconf_mfp(TT_MFP_BASE,&iorecTT,baud,ctrl,ucr,rsr,tsr,scr);
 }
 #endif  /* CONF_WITH_TT_MFP */
 
 #if BCONMAP_AVAILABLE
-static ULONG rsconf_dummy(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
+static ULONG __CDECL rsconf_dummy(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
 {
     return 0UL;
 }
@@ -724,7 +724,7 @@ void init_serport(void)
 #endif
 }
 
-LONG bconmap(WORD dev)
+LONG __CDECL bconmap(WORD dev)
 {
 #if BCONMAP_AVAILABLE
     MAPTAB *maptabptr;

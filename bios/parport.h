@@ -12,9 +12,9 @@
 
 #include "portab.h"
 
-LONG bconstat0(void);
-LONG bconin0(void);
-LONG bcostat0(void);
-LONG bconout0(WORD dev, WORD c);
+LONG __CDECL bconstat0(void);
+LONG __CDECL bconin0(void);
+LONG __CDECL bcostat0(void);
+LONG __CDECL bconout0(WORD dev, WORD c);
 
 void parport_init(void);

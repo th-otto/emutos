@@ -108,8 +108,8 @@ typedef struct {
 } MFDB;
 
 
-extern void linea_blit(struct blit_frame *info); /* called only from linea.S */
-extern void linea_raster(void); /* called only from linea.S */
+extern void __CDECL linea_blit(struct blit_frame *info); /* called only from linea.S */
+extern void __CDECL linea_raster(void); /* called only from linea.S */
 
 
 /* holds VDI internal info for bit_blt() */
@@ -203,7 +203,7 @@ void vdi_vr_trnfm(Vwk * vwk)
 
 #if ASM_BLIT
 
-extern void bit_blt(void);
+extern void __CDECL bit_blt(void);
 
 #else
 
@@ -958,7 +958,7 @@ vdi_vrt_cpyfm(Vwk * vwk)
 }
 
 /* line-A wrapper for Copy raster form */
-void linea_raster(void)
+void __CDECL linea_raster(void)
 {
     struct raster_t raster;
 
@@ -971,7 +971,7 @@ void linea_raster(void)
 }
 
 /* line-A wrapper for blitting */
-void linea_blit(struct blit_frame *info)
+void __CDECL linea_blit(struct blit_frame *info)
 {
     /* with line-A, need to calculate these for bit_blt()
      * (whereas VDI needs to calculate wd & ht)

@@ -404,7 +404,7 @@ WORD fm_show(WORD string, WORD *pwd, WORD level)
  *          TRUE    user selected button 2 or 3 of the alert
  *                  (assumed to be Retry)
  */
-WORD eralert(WORD n, WORD d)
+WORD __CDECL eralert(WORD n, WORD d)
 {
     WORD    level;
     WORD    drive_let;

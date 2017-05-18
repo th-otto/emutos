@@ -30,7 +30,7 @@
 /*--- Global variables ---*/
 
 /* XHDI_HANDLER is the type where an XHDI cookie points to */
-typedef long (*XHDI_HANDLER)(UWORD opcode, ...);
+typedef long (__CDECL *XHDI_HANDLER)(UWORD opcode, ...);
 static XHDI_HANDLER next_handler; /* Next handler installed by XHNewCookie() */
 
 static ULONG XHDI_drvmap;
@@ -371,7 +371,7 @@ static long XHReadWrite(UWORD major, UWORD minor, UWORD rw, ULONG sector,
  * It backs up all the registers according to the XHDI specification,
  * then calls the xhdi_handler() C implementation below.
  */
-long xhdi_handler(UWORD *stack)
+long __CDECL xhdi_handler(UWORD *stack)
 {
     UWORD opcode = *stack;
 

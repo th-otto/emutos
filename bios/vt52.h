@@ -19,7 +19,7 @@
 #include "portab.h"
 
 extern void vt52_init(void);            /* initialize the vt52 console */
-extern WORD cursconf(WORD, WORD);       /* XBIOS cursor configuration */
+extern WORD __CDECL cursconf(WORD, WORD);       /* XBIOS cursor configuration */
 
 extern void cputc(WORD);
 

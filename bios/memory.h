@@ -35,7 +35,7 @@
 
 #if CONF_WITH_ADVANCED_CPU
 
-BOOL detect_32bit_address_bus(void);
+BOOL __CDECL detect_32bit_address_bus(void);
 
 #endif /* CONF_WITH_ADVANCED_CPU */
 

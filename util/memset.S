@@ -28,8 +28,10 @@
 // void bzero(void *address, unsigned long size)
 //
 _bzero:
+#ifndef __FASTCALL__
         move.l   4(sp),a0
         move.l   8(sp),d0
+#endif
         move.l   d7,-(sp)
         moveq    #0,d7
         bra      memset
@@ -38,9 +40,12 @@ _bzero:
 // fills with byte c, returns the given address.
 
 _memset:
+#ifndef __FASTCALL__
         move.l   4(sp),a0
+        move.w   8(sp),d0
+        move.l   10(sp),d1
+#endif
         move.l   d7,-(sp)
-        move.w   12(sp),d0
         move.b   d0,d7
 #ifdef __mcoldfire__
         lsl.l    #8,d7
@@ -51,12 +56,15 @@ _memset:
         move.w   d7,d0
         swap     d7
         move.w   d0,d7
-        move.l   14(sp),d0
+        move.l   d1,d0
         ble      end
 
 // at this point, a0=block, d7=pattern, d0=size, (sp)=saved d7
 // and we do not read the stack args any more.
 memset:
+#ifdef __FASTCALL__
+        move.l   a0,-(sp)              /* save return address */
+#endif
         move.l   a0,d1
         btst     #0,d1
         beq.s    even
@@ -104,12 +112,8 @@ loop256:
         lea      256(a0),a0
 #endif
 end256:
-#ifdef __mcoldfire__
         subq.l   #1,d0
         bpl.s    loop256               // decrement count, test and loop
-#else
-        dbra     d0,loop256            // decrement count, test and loop
-#endif
         move.l   d1,d0                 // remainder becomes new count
         beq      done                  // more? no.
 #ifdef __mcoldfire__
@@ -175,6 +179,10 @@ end1:
         dbra     d0,loop1              // decrement count, test and loop
 #endif
 end:
+#ifdef __FASTCALL__
+        move.l   (sp)+,a0              // return the address.
+#else
+        move.l   8(sp),d0              // return the address.
+#endif
         move.l   (sp)+,d7
-        move.l   4(sp),d0              // return the address.
         rts

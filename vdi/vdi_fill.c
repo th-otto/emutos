@@ -1049,7 +1049,7 @@ void vdi_v_get_pixel(Vwk * vwk)
  * output:
  *     pixel value
  */
-WORD
+WORD __CDECL
 get_pix(void)
 {
     /* return the composed color value */
@@ -1064,7 +1064,7 @@ get_pix(void)
  *     PTSIN(0) = x coordinate.
  *     PTSIN(1) = y coordinate.
  */
-void
+void __CDECL
 put_pix(void)
 {
     UWORD *addr;

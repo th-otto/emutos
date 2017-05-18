@@ -14,10 +14,10 @@
 
 extern UWORD current_time, current_date;
 
-long xgetdate(void);
-long xsetdate(UWORD d);
-long xgettime(void);
-long xsettime(UWORD t);
+long __CDECL xgetdate(void);
+long __CDECL xsetdate(UWORD d);
+long __CDECL xgettime(void);
+long __CDECL xsettime(UWORD t);
 
 /* called to initialize the module */
 void time_init(void);

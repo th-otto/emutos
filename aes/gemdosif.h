@@ -27,23 +27,23 @@ extern LONG     CMP_TICK;                       /* indicates to tick    */
                                                 /*   tchange            */
 
 
-extern void disable_interrupts(void);
-extern void enable_interrupts(void);
+extern void __CDECL disable_interrupts(void);
+extern void __CDECL enable_interrupts(void);
 
-extern void far_bcha(void);
-extern void far_mcha(void);
-extern void aes_wheel(void);
-extern void justretf(void);
+extern void __CDECL far_bcha(void);
+extern void __CDECL far_mcha(void);
+extern void __CDECL aes_wheel(void);
+extern void __CDECL justretf(void);
 
-extern void unset_aestrap(void);
-extern void set_aestrap(void);
-extern BOOL aestrap_intercepted(void);
+extern void __CDECL unset_aestrap(void);
+extern void __CDECL set_aestrap(void);
+extern BOOL __CDECL aestrap_intercepted(void);
 
-extern void takeerr(void);
-extern void giveerr(void);
-extern void retake(void);
+extern void __CDECL takeerr(void);
+extern void __CDECL giveerr(void);
+extern void __CDECL retake(void);
 
-extern void drawrat(WORD newx, WORD newy);
+extern void __CDECL drawrat(WORD newx, WORD newy);
 
 
 #endif

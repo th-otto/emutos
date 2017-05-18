@@ -24,7 +24,7 @@
 
 const char * const * const *nls_hash;
 
-void gettext_init(void); /* call each time the hash changes */
+void __CDECL gettext_init(void); /* call each time the hash changes */
 
 /* initialisation */
 

@@ -222,14 +222,14 @@ extern BYTE     cur_ms_stat;    /* current mouse status */
 
 
 /* shared VDI functions & VDI line-A wrapper functions */
-void undraw_sprite(void);
-void draw_sprite(void);
-WORD get_pix(void);
-void put_pix(void);
+void __CDECL undraw_sprite(void);
+void __CDECL draw_sprite(void);
+WORD __CDECL get_pix(void);
+void __CDECL put_pix(void);
 
 
 /* Assembly Language Support Routines, ignore workstation arg */
-void text_blt(Vwk * vwk);
+void __CDECL text_blt(Vwk * vwk);
 void rectfill (Vwk * vwk, Rect * rect);
 
 

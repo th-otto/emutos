@@ -24,13 +24,13 @@
 
 /* mouse related vectors (linea variables in bios/lineavars.S) */
 
-extern void     (*user_but)(void);      /* user button vector */
-extern void     (*user_cur)(void);      /* user cursor vector */
-extern void     (*user_mot)(void);      /* user motion vector */
+extern void     (*__CDECL user_but)(void);      /* user button vector */
+extern void     (*__CDECL user_cur)(void);      /* user cursor vector */
+extern void     (*__CDECL user_mot)(void);      /* user motion vector */
 
 /* call the vectors from C */
-extern void call_user_but(WORD status);
-extern void call_user_wheel(WORD wheel_number, WORD wheel_amount);
+extern void __CDECL call_user_but(WORD status);
+extern void __CDECL call_user_wheel(WORD wheel_number, WORD wheel_amount);
 
 /* Mouse / sprite structure */
 typedef struct Mcdb_ Mcdb;
@@ -49,9 +49,9 @@ static void cur_display(Mcdb *sprite, MCS *savebuf, WORD x, WORD y);
 static void cur_replace(MCS *savebuf);
 static void vb_draw(void);             /* user button vector */
 
-extern void mouse_int(void);    /* mouse interrupt routine */
-extern void wheel_int(void);    /* wheel interrupt routine */
-extern void mov_cur(void);      /* user button vector */
+extern void __CDECL mouse_int(void);    /* mouse interrupt routine */
+extern void __CDECL wheel_int(void);    /* wheel interrupt routine */
+extern void __CDECL mov_cur(void);      /* user button vector */
 
 /* global line-A storage area for mouse form definition */
 extern Mcdb mouse_cdb;
@@ -62,7 +62,7 @@ extern WORD GCURX, GCURY;
 
 
 /* FIXME: should go to linea variables */
-void     (*user_wheel)(void);   /* user provided mouse wheel vector */
+void     (__CDECL *user_wheel)(void);   /* user provided mouse wheel vector */
 PFVOID old_statvec;             /* original IKBD status packet routine */
 
 
@@ -115,7 +115,7 @@ static const Mcdb arrow_cdb = {
  * do_nothing - doesn't do much  :-)
  */
 
-static void do_nothing(void)
+static void __CDECL do_nothing(void)
 {
 }
 
@@ -257,6 +257,7 @@ void vdi_v_locator(Vwk * vwk)
 
 /*
  * vdi_v_show_c - show cursor
+ * Note: directly called by linea routine - must not use workstation pointer
  */
 void vdi_v_show_c(Vwk * vwk)
 {
@@ -270,6 +271,7 @@ void vdi_v_show_c(Vwk * vwk)
 
 /*
  * vdi_v_hide_c - hide cursor
+ * Note: directly called by linea routine - must not use workstation pointer
  */
 void vdi_v_hide_c(Vwk * vwk)
 {
@@ -325,7 +327,7 @@ void vdi_vex_butv(Vwk * vwk)
 
     pointer = (LONG*)&CONTRL[9];
     *pointer = (LONG)user_but;
-    user_but = (void (*)(void)) *--pointer;
+    user_but = (void (__CDECL *)(void)) *--pointer;
 }
 
 
@@ -349,7 +351,7 @@ void vdi_vex_motv(Vwk * vwk)
 
     pointer = (LONG*) &CONTRL[9];
     *pointer = (LONG) user_mot;
-    user_mot = (void (*)(void)) *--pointer;
+    user_mot = (void (__CDECL *)(void)) *--pointer;
 }
 
 
@@ -375,7 +377,7 @@ void vdi_vex_curv(Vwk * vwk)
 
     pointer = (LONG*) &CONTRL[9];
     *pointer = (LONG) user_cur;
-    user_cur = (void (*)(void)) *--pointer;
+    user_cur = (void (__CDECL *)(void)) *--pointer;
 }
 
 
@@ -402,7 +404,7 @@ void vdi_vex_wheelv(Vwk * vwk)
 
     pointer = (LONG*) &CONTRL[9];
     *pointer = (LONG) user_wheel;
-    user_wheel = (void (*)(void)) *--pointer;
+    user_wheel = (void (__CDECL *)(void)) *--pointer;
 }
 #endif
 
@@ -479,6 +481,7 @@ static void set_mouse_form (const Mcdb *src, Mcdb * dst)
  *     intin[21-36] - 16 words of cursor data
  *
  * Outputs:        None
+ * Note: directly called by linea routine - must not use workstation pointer
  */
 void vdi_vsc_form(Vwk * vwk)
 {
@@ -490,7 +493,7 @@ void vdi_vsc_form(Vwk * vwk)
  * vdi_mousex_handler - Handle additional mouse buttons
  */
 
-static void vdi_mousex_handler (WORD scancode)
+static void __CDECL vdi_mousex_handler (WORD scancode)
 {
     WORD old_buttons = MOUSE_BT;
 
@@ -948,12 +951,12 @@ WORD sprite_x, sprite_y;
 Mcdb *sprite_def;
 MCS *sprite_sav;
 
-void draw_sprite(void)
+void __CDECL draw_sprite(void)
 {
     cur_display(sprite_def, sprite_sav, sprite_x, sprite_y);
 }
 
-void undraw_sprite(void)
+void __CDECL undraw_sprite(void)
 {
     cur_replace(sprite_sav);
 }

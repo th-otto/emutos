@@ -20,10 +20,10 @@
 #define GIACCESS_READ  0x00
 #define GIACCESS_WRITE 0x80
 
-extern LONG giaccess(WORD data, WORD reg);
-extern void ongibit(WORD value);
-extern void offgibit(WORD value);
-extern LONG dosound(LONG table);
+extern LONG __CDECL giaccess(WORD data, WORD reg);
+extern void __CDECL ongibit(WORD value);
+extern void __CDECL offgibit(WORD value);
+extern LONG __CDECL dosound(LONG table);
 
 /* internal routines */
 
@@ -33,7 +33,7 @@ void snd_init(void);
 #if CONF_WITH_YM2149
 
 /* timer C int sound routine */
-extern void sndirq(void);
+extern void __CDECL sndirq(void);
 
 #endif /* CONF_WITH_YM2149 */
 
@@ -45,6 +45,6 @@ extern void sndirq(void);
 void bell(void);
 
 /* play key click sound, called by keyboard interrupt */
-void keyclick(UBYTE scancode);
+void __CDECL keyclick(UBYTE scancode);
 
 #endif /* SOUND_H */

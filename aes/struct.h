@@ -142,7 +142,7 @@ SPB
         EVB     *sy_wait;
 } ;
 
-typedef void (*FCODE)(LONG fdata);      /* pointer to function used by forkq() */
+typedef void (__CDECL *FCODE)(LONG fdata);      /* pointer to function used by forkq() */
 
 struct fpd
 {
@@ -158,7 +158,7 @@ typedef struct
 {
     ULONG gm_magic;         /* Magical value, has to be GEM_MUPB_MAGIC */
     void  *gm_end;          /* End of the memory required by GEM */
-    void  (*gm_init)(void); /* Start address of GEM */
+    void  (__CDECL *gm_init)(void); /* Start address of GEM */
 } GEM_MUPB;
 
 #endif /* GEMSTRUCT_H */

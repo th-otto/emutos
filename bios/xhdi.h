@@ -47,11 +47,11 @@
 
 #include "portab.h"
 
-extern long xhdi_vec(UWORD opcode, ...); /* In bios/natfeat.S */
+extern long __CDECL xhdi_vec(UWORD opcode, ...); /* In bios/natfeat.S */
 
 void create_XHDI_cookie(void);
 void init_XHDI_drvmap(void);
-long xhdi_handler(UWORD *stack);
+long __CDECL xhdi_handler(UWORD *stack);
 
 #endif /* CONF_WITH_XHDI */
 

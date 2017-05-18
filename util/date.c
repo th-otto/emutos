@@ -39,7 +39,7 @@ static char *month_name[] = {
   "13?", "14?", "15?"
 };
 
-int main(int argc, char **argv)
+int main(void)
 {
   long time;
   int year;

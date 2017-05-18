@@ -94,9 +94,9 @@ void tt_mfp_init(void);
 
 /*==== Xbios functions ====================================================*/
 
-void mfpint(WORD num, LONG vector);
-void jdisint(WORD num);
-void jenabint(WORD num);
+void __CDECL mfpint(WORD num, LONG vector);
+void __CDECL jdisint(WORD num);
+void __CDECL jenabint(WORD num);
 
 /*==== internal functions =================================================*/
 
@@ -108,7 +108,7 @@ int timeout_gpip(LONG delay);   /* delay in ticks */
 
 /*==== Xbios functions ====================================================*/
 
-void xbtimer(WORD timer, WORD control, WORD data, LONG vector);
+void __CDECL xbtimer(WORD timer, WORD control, WORD data, LONG vector);
 
 #endif /* CONF_WITH_MFP */
 

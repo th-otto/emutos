@@ -11,6 +11,6 @@
 #define XBIOS_H
 
 /* used by vectors.S */
-LONG xbios_do_unimpl(WORD number);
+LONG __CDECL xbios_do_unimpl(WORD number);
 
 #endif /* XBIOS_H */

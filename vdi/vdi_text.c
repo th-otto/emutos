@@ -475,7 +475,7 @@ void vdi_vst_height(Vwk * vwk)
 }
 
 
-extern UWORD act_siz(Vwk * vwk, UWORD top); /* called also from vdi_tblit.S */
+extern UWORD __CDECL act_siz(Vwk * vwk, UWORD top); /* called also from vdi_tblit.S */
 
 /*
  * act_siz - Actual sizer routine
@@ -490,7 +490,7 @@ extern UWORD act_siz(Vwk * vwk, UWORD top); /* called also from vdi_tblit.S */
  * exit:
  *   actual size
  */
-UWORD act_siz(Vwk * vwk, UWORD top)
+UWORD __CDECL act_siz(Vwk * vwk, UWORD top)
 {
     UWORD accu;
     UWORD retval;

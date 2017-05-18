@@ -10,20 +10,20 @@
 #ifndef BIOS_H
 #define BIOS_H
 
-void biosmain(void) NORETURN;
-LONG bios_do_unimpl(WORD number);
+void __CDECL biosmain(void) NORETURN;
+LONG __CDECL bios_do_unimpl(WORD number);
 
 /* misc BIOS functions */
-LONG bconstat(WORD handle);
-LONG bconin(WORD handle);
-LONG bconout(WORD handle, WORD what);
-LONG lrwabs(WORD r_w, UBYTE *adr, WORD numb, WORD first, WORD drive, LONG lfirst);
-LONG setexc(WORD num, LONG vector);
-LONG tickcal(void);
-LONG getbpb(WORD drive);
-LONG bcostat(WORD handle);
-LONG mediach(WORD drv);
-LONG drvmap(void);
+LONG __CDECL bconstat(WORD handle);
+LONG __CDECL bconin(WORD handle);
+LONG __CDECL bconout(WORD handle, WORD what);
+LONG __CDECL lrwabs(WORD r_w, UBYTE *adr, WORD numb, WORD first, WORD drive, LONG lfirst);
+LONG __CDECL setexc(WORD num, LONG vector);
+LONG __CDECL tickcal(void);
+LONG __CDECL getbpb(WORD drive);
+LONG __CDECL bcostat(WORD handle);
+LONG __CDECL mediach(WORD drv);
+LONG __CDECL drvmap(void);
 
 /* utility functions */
 #if CONF_SERIAL_CONSOLE_ANSI

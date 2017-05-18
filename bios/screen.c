@@ -166,7 +166,7 @@ static const UWORD tt_dflt_palette[] = {
 /*
  * Set TT shifter mode
  */
-WORD esetshift(WORD mode)
+WORD __CDECL esetshift(WORD mode)
 {
     volatile WORD *resreg = (WORD *)TT_SHIFTER;
     WORD oldmode;
@@ -184,7 +184,7 @@ WORD esetshift(WORD mode)
 /*
  * Get TT shifter mode
  */
-WORD egetshift(void)
+WORD __CDECL egetshift(void)
 {
     if (!has_tt_shifter)
         return 0x51;    /* unimplemented xbios call: return function # */
@@ -196,7 +196,7 @@ WORD egetshift(void)
 /*
  * Read/modify TT shifter colour bank number
  */
-WORD esetbank(WORD bank)
+WORD __CDECL esetbank(WORD bank)
 {
     volatile UBYTE *shiftreg = (UBYTE *)(TT_SHIFTER+1);
     UBYTE old;
@@ -215,7 +215,7 @@ WORD esetbank(WORD bank)
 /*
  * Read/modify TT palette colour entry
  */
-WORD esetcolor(WORD index,UWORD color)
+WORD __CDECL esetcolor(WORD index,UWORD color)
 {
     volatile UWORD *ttcol_regs = (UWORD *) TT_PALETTE_REGS;
     UWORD oldcolor;
@@ -240,7 +240,7 @@ WORD esetcolor(WORD index,UWORD color)
  * which is the de facto TOS standard for unimplemented xbios functions.
  * Therefore internally we make it return a WORD.
  */
-WORD esetpalette(WORD index,WORD count,UWORD *rgb)
+WORD __CDECL esetpalette(WORD index,WORD count,UWORD *rgb)
 {
     volatile WORD *ttcolour;
 
@@ -265,7 +265,7 @@ WORD esetpalette(WORD index,WORD count,UWORD *rgb)
  *
  * See the comments for esetpalette() above
  */
-WORD egetpalette(WORD index,WORD count,UWORD *rgb)
+WORD __CDECL egetpalette(WORD index,WORD count,UWORD *rgb)
 {
     volatile WORD *ttcolour;
 
@@ -288,7 +288,7 @@ WORD egetpalette(WORD index,WORD count,UWORD *rgb)
 /*
  * Read/modify TT shifter grey mode bit
  */
-WORD esetgray(WORD mode)
+WORD __CDECL esetgray(WORD mode)
 {
     volatile UBYTE *shiftreg = (UBYTE *)TT_SHIFTER;
     UBYTE old;
@@ -309,7 +309,7 @@ WORD esetgray(WORD mode)
 /*
  * Read/modify TT shifter smear mode bit
  */
-WORD esetsmear(WORD mode)
+WORD __CDECL esetsmear(WORD mode)
 {
     volatile UBYTE *shiftreg = (UBYTE *)TT_SHIFTER;
     UBYTE old;
@@ -877,7 +877,7 @@ static WORD atari_setcolor(WORD colorNum, WORD color)
 
 /* hardware independent xbios routines */
 
-const UBYTE *physbase(void)
+const UBYTE *__CDECL physbase(void)
 {
 #ifdef MACHINE_AMIGA
     return amiga_physbase();
@@ -902,12 +902,12 @@ static void setphys(const UBYTE *addr)
 #endif
 }
 
-UBYTE *logbase(void)
+UBYTE *__CDECL logbase(void)
 {
     return v_bas_ad;
 }
 
-WORD getrez(void)
+WORD __CDECL getrez(void)
 {
 #if CONF_WITH_ATARI_VIDEO
     return atari_getrez();
@@ -931,7 +931,7 @@ WORD getrez(void)
  *      if logLoc==physLoc==rez==-1, 'videlmode' is used to select
  *      the cellheight of the default font
  */
-void setscreen(UBYTE *logLoc, const UBYTE *physLoc, WORD rez, WORD videlmode)
+void __CDECL setscreen(UBYTE *logLoc, const UBYTE *physLoc, WORD rez, WORD videlmode)
 {
     if (logLoc != (UBYTE *)-1) {
         v_bas_ad = logLoc;
@@ -963,7 +963,7 @@ void setscreen(UBYTE *logLoc, const UBYTE *physLoc, WORD rez, WORD videlmode)
     }
 }
 
-void setpalette(const UWORD *palettePtr)
+void __CDECL setpalette(const UWORD *palettePtr)
 {
 #ifdef ENABLE_KDEBUG
     int i, max;
@@ -986,7 +986,7 @@ void setpalette(const UWORD *palettePtr)
  * on a TT, the h/w updates the corresponding TT palette registers
  * automagically.
  */
-WORD setcolor(WORD colorNum, WORD color)
+WORD __CDECL setcolor(WORD colorNum, WORD color)
 {
 #ifdef MACHINE_AMIGA
     return amiga_setcolor(colorNum, color);
@@ -999,7 +999,7 @@ WORD setcolor(WORD colorNum, WORD color)
 }
 
 
-void vsync(void)
+void __CDECL vsync(void)
 {
     LONG a;
 #if CONF_WITH_ATARI_VIDEO

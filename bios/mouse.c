@@ -38,7 +38,7 @@ struct param rel_pblock;        /* mouse parameter block */
  *
  */
 
-void Initmous(WORD type, struct param *param, PFVOID newvec)
+void __CDECL Initmous(WORD type, struct param *param, PFVOID newvec)
 {
     long retval = -1;           /* ok, if it stays so... */
     struct param *p =

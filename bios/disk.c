@@ -867,7 +867,7 @@ LONG disk_rw(UWORD unit, UWORD rw, ULONG sector, UWORD count, UBYTE *buf)
 
 /*==== XBIOS functions ====================================================*/
 
-LONG DMAread(LONG sector, WORD count, UBYTE *buf, WORD major)
+LONG __CDECL DMAread(LONG sector, WORD count, UBYTE *buf, WORD major)
 {
     UWORD unit = NUMFLOPPIES + major;
     LONG rc;
@@ -880,7 +880,7 @@ LONG DMAread(LONG sector, WORD count, UBYTE *buf, WORD major)
     return rc;
 }
 
-LONG DMAwrite(LONG sector, WORD count, const UBYTE *buf, WORD major)
+LONG __CDECL DMAwrite(LONG sector, WORD count, const UBYTE *buf, WORD major)
 {
     UWORD unit = NUMFLOPPIES + major;
 

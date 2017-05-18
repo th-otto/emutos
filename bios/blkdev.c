@@ -53,10 +53,10 @@ static PUN_INFO pun_info;
 /*
  * Function prototypes
  */
-static LONG blkdev_hdv_boot(void);
-static void blkdev_hdv_init(void);
-static LONG blkdev_mediach(WORD dev);
-static LONG blkdev_rwabs(WORD rw, UBYTE *buf, WORD cnt, WORD recnr, WORD dev, LONG lrecnr);
+static LONG __CDECL blkdev_hdv_boot(void);
+static void __CDECL blkdev_hdv_init(void);
+static LONG __CDECL blkdev_mediach(WORD dev);
+static LONG __CDECL blkdev_rwabs(WORD rw, UBYTE *buf, WORD cnt, WORD recnr, WORD dev, LONG lrecnr);
 static LONG bootcheck(void);
 static void bus_init(void);
 static WORD hd_boot_read(void);
@@ -158,7 +158,7 @@ static void pun_info_setup(void)
  *
  */
 
-static void blkdev_hdv_init(void)
+static void __CDECL blkdev_hdv_init(void)
 {
     /* Start with no drives. This matters for EmuTOS-RAM, because the system
      * variables are not automatically reinitialized. */
@@ -234,7 +234,7 @@ LONG blkdev_boot(void)
 /*
  * blkdev_hdv_boot - BIOS boot vector
  */
-static LONG blkdev_hdv_boot(void)
+static LONG __CDECL blkdev_hdv_boot(void)
 {
     LONG err;
 
@@ -353,7 +353,7 @@ int add_partition(UWORD unit, LONG *devices_available, char id[], ULONG start, U
 
 #define CNTMAX  0x7FFF  /* 16-bit MAXINT */
 
-static LONG blkdev_rwabs(WORD rw, UBYTE *buf, WORD cnt, WORD recnr, WORD dev, LONG lrecnr)
+static LONG __CDECL blkdev_rwabs(WORD rw, UBYTE *buf, WORD cnt, WORD recnr, WORD dev, LONG lrecnr)
 {
     int retries = RWABS_RETRIES;
     int unit = dev;
@@ -502,7 +502,7 @@ WORD get_shift(ULONG blocksize)
  * implement the Mediach flush as documented in Compendium
  */
 
-LONG blkdev_getbpb(WORD dev)
+LONG __CDECL blkdev_getbpb(WORD dev)
 {
     BLKDEV *bdev = blkdev + dev;
     struct bs *b;
@@ -636,7 +636,7 @@ LONG blkdev_getbpb(WORD dev)
  * blkdev_mediach - BIOS media change vector
  */
 
-static LONG blkdev_mediach(WORD dev)
+static LONG __CDECL blkdev_mediach(WORD dev)
 {
     BLKDEV *b = &blkdev[dev];
     UWORD unit = b->unit;

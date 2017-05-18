@@ -23,8 +23,8 @@
 
 /* timer related vectors (linea variables in bios/lineavars.S) */
 
-extern void     (*tim_addr)(int);       /* timer interrupt vector */
-extern void     (*tim_chain)(int);      /* timer interrupt vector save */
+extern void     (__CDECL *tim_addr)(int);       /* timer interrupt vector */
+extern void     (__CDECL *tim_chain)(int);      /* timer interrupt vector save */
 
 
 
@@ -118,7 +118,7 @@ void vdi_vex_timv(Vwk * vwk)
     old_sr = set_sr(0x2700);
 
     *pointer = (LONG) tim_addr;
-    tim_addr = (void (*)(int)) *--pointer;
+    tim_addr = (void (__CDECL *)(int)) *--pointer;
 
     set_sr(old_sr);
 
@@ -132,7 +132,7 @@ void vdi_vex_timv(Vwk * vwk)
  * do_nothing - doesn't do much  :-)
  */
 
-static void do_nothing_int(int u)
+static void __CDECL do_nothing_int(int u)
 {
     (void)u;
 }
@@ -155,7 +155,7 @@ void timer_init(Vwk * vwk)
     tim_addr = do_nothing_int;          /* tick points to rts */
 
     old_sr = set_sr(0x2700);            /* disable interrupts */
-    tim_chain = (void(*)(int))          /* save old vector */
+    tim_chain = (void(__CDECL *)(int))  /* save old vector */
     Setexc(0x100, (long)tick_int);      /* set etv_timer to tick_int */
     set_sr(old_sr);                     /* enable interrupts */
 

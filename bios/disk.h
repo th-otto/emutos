@@ -99,8 +99,8 @@ LONG disk_rw(UWORD unit, UWORD rw, ULONG sector, UWORD count, UBYTE *buf);
 
 /* xbios functions */
 
-extern LONG DMAread(LONG sector, WORD count, UBYTE *buf, WORD major);
-extern LONG DMAwrite(LONG sector, WORD count, const UBYTE *buf, WORD major);
+extern LONG __CDECL DMAread(LONG sector, WORD count, UBYTE *buf, WORD major);
+extern LONG __CDECL DMAwrite(LONG sector, WORD count, const UBYTE *buf, WORD major);
 
 /* partition detection */
 

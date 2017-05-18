@@ -16,8 +16,8 @@
 typedef struct
 {
         long magic;
-        long (* nfID)(const char *);
-        long (* nfCall)(long ID, ...);
+        long (__CDECL * nfID)(const char *);
+        long (__CDECL * nfCall)(long ID, ...);
 } NatFeatCookie;
 
 extern NatFeatCookie natfeat_cookie;

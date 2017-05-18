@@ -180,7 +180,7 @@ static WORD envsize(char *env)
  */
 static PD *cur_p;
 
-long xexec(WORD flag, char *path, char *tail, char *env)
+long __CDECL xexec(WORD flag, char *path, char *tail, char *env)
 {
     PD *p, *owner;
     PGMHDR01 hdr;
@@ -577,7 +577,7 @@ static void proc_go(PD *p)
  * terminates the calling process and returns to the parent process
  * with a return code of zero
  */
-void x0term(void)
+void __CDECL x0term(void)
 {
     xterm(0);
 }
@@ -590,7 +590,7 @@ void x0term(void)
  *
  * Function 0x4C        p_term
  */
-void xterm(UWORD rc)
+void __CDECL xterm(UWORD rc)
 {
     PD *p = run;
 
@@ -611,7 +611,7 @@ void xterm(UWORD rc)
 /*
  * xtermres - Function 0x31 (Ptermres)
  */
-WORD xtermres(long blkln, WORD rc)
+WORD __CDECL xtermres(long blkln, WORD rc)
 {
     xsetblk(0,run,blkln);
 

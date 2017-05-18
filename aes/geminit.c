@@ -64,10 +64,10 @@
 #include "biosdefs.h"
 #include "kprint.h"
 
-extern LONG size_theglo(void); /* called only from gemstart.S */
-extern LONG init_p0_stkptr(void); /* called only from gemstart.S */
-extern void run_accs_and_desktop(void); /* called only from gemstart.S */
-extern void gem_main(void); /* called only from gemstart.S */
+extern LONG __CDECL size_theglo(void); /* called only from gemstart.S */
+extern LONG __CDECL init_p0_stkptr(void); /* called only from gemstart.S */
+extern void __CDECL run_accs_and_desktop(void); /* called only from gemstart.S */
+extern void __CDECL gem_main(void); /* called only from gemstart.S */
 
 #define ROPEN 0
 
@@ -109,14 +109,14 @@ GLOBAL WORD     curpid;
 GLOBAL THEGLO   D;
 
 /* Prototypes: */
-extern void accdesk_start(void) NORETURN;   /* see gemstart.S */
+extern void __CDECL accdesk_start(void) NORETURN;   /* see gemstart.S */
 
 
 /*
  *  return size of global area
  *  called from gemstart.S
  */
-LONG size_theglo(void)
+LONG __CDECL size_theglo(void)
 {
     return sizeof(THEGLO);
 }
@@ -128,7 +128,7 @@ LONG size_theglo(void)
  *      2. initialises the supervisor stack pointer in the UDA
  *      3. returns the offset from the start of THEGLO to the end of the stack
  */
-LONG init_p0_stkptr(void)
+LONG __CDECL init_p0_stkptr(void)
 {
     UDA *u = &D.g_int[0].a_uda;
 
@@ -496,7 +496,7 @@ void wait_for_accs(WORD bitmask)
  *  memory allocated to or by desk accessories is automatically freed
  *  on resolution change.
  */
-void run_accs_and_desktop(void)
+void __CDECL run_accs_and_desktop(void)
 {
     WORD i;
     BOOL isgem;
@@ -560,7 +560,7 @@ void run_accs_and_desktop(void)
     gsx_wsclose();
 }
 
-void gem_main(void)
+void __CDECL gem_main(void)
 {
     WORD    i;
 

@@ -1475,4 +1475,11 @@
 # endif
 #endif
 
+#undef __CDECL
+#ifdef __FASTCALL__
+#  define __CDECL __attribute__((cdecl))
+#else
+#  define __CDECL
+#endif
+
 #endif /* CONFIG_H */

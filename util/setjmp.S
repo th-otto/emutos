@@ -23,15 +23,21 @@
         .text
 
 _setjmp:
+#ifndef __FASTCALL__
         move.l  4(sp),a0
+#endif
         move.l  (sp),(a0)+
         movem.l d2-d7/a2-a7,(a0)
         moveq   #0,d0
         rts
 
 _longjmp:
+#ifdef __FASTCALL__
+        tst.w   d0
+#else
         move.l  4(sp),a0
         move.w  8(sp),d0
+#endif
         beq     nonzero
         moveq   #1,d0
 nonzero:

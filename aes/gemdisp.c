@@ -47,7 +47,7 @@
 
 /* forkq puts a fork block with a routine in the fork ring      */
 
-void forkq(FCODE fcode, LONG fdata)
+void __CDECL forkq(FCODE fcode, LONG fdata)
 {
     FPD *f;
 
@@ -207,9 +207,9 @@ static void schedule(void)
 /*                                                                      */
 /************************************************************************/
 
-extern void disp(void); /* called only from aes/gemasm.S */
+extern void __CDECL disp(void); /* called only from aes/gemasm.S */
 
-void disp(void)
+void __CDECL disp(void)
 {
     AESPD *p;
 

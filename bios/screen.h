@@ -45,14 +45,14 @@
 
 /* hardware dependant xbios routines */
 
-WORD esetshift(WORD mode);
-WORD egetshift(void);
-WORD esetbank(WORD bank);
-WORD esetcolor(WORD index,UWORD color);
-WORD esetpalette(WORD index,WORD count,UWORD *rgb);
-WORD egetpalette(WORD index,WORD count,UWORD *rgb);
-WORD esetgray(WORD mode);
-WORD esetsmear(WORD mode);
+WORD __CDECL esetshift(WORD mode);
+WORD __CDECL egetshift(void);
+WORD __CDECL esetbank(WORD bank);
+WORD __CDECL esetcolor(WORD index,UWORD color);
+WORD __CDECL esetpalette(WORD index,WORD count,UWORD *rgb);
+WORD __CDECL egetpalette(WORD index,WORD count,UWORD *rgb);
+WORD __CDECL esetgray(WORD mode);
+WORD __CDECL esetsmear(WORD mode);
 
 /* pallette color definitions */
 
@@ -123,12 +123,12 @@ void get_pixel_size(WORD *width,WORD *height);
 
 /* hardware independant xbios routines */
 
-const UBYTE *physbase(void);
-UBYTE *logbase(void);
-WORD getrez(void);
-void setscreen(UBYTE *logLoc, const UBYTE *physLoc, WORD rez, WORD videlmode);
-void setpalette(const UWORD *palettePtr);
-WORD setcolor(WORD colorNum, WORD color);
-void vsync(void);
+const UBYTE *__CDECL physbase(void);
+UBYTE *__CDECL logbase(void);
+WORD __CDECL getrez(void);
+void __CDECL setscreen(UBYTE *logLoc, const UBYTE *physLoc, WORD rez, WORD videlmode);
+void __CDECL setpalette(const UWORD *palettePtr);
+WORD __CDECL setcolor(WORD colorNum, WORD color);
+void __CDECL vsync(void);
 
 #endif /* SCREEN_H */

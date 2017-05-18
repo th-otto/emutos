@@ -83,7 +83,7 @@ void mfp_init(void)
 
 /*==== xbios functions ===========================================*/
 
-void mfpint(WORD num, LONG vector)
+void __CDECL mfpint(WORD num, LONG vector)
 {
     num &= 0x0F;
     jdisint(num);
@@ -91,7 +91,7 @@ void mfpint(WORD num, LONG vector)
     jenabint(num);
 }
 
-void jdisint(WORD num)
+void __CDECL jdisint(WORD num)
 {
     MFP *mfp=MFP_BASE;   /* set base address of MFP */
     UBYTE i;
@@ -112,7 +112,7 @@ void jdisint(WORD num)
     }
 }
 
-void jenabint(WORD num)
+void __CDECL jenabint(WORD num)
 {
     MFP *mfp=MFP_BASE;   /* set base address of MFP */
     UBYTE i;
@@ -160,7 +160,7 @@ void setup_timer(MFP *mfp, WORD timer, WORD control, WORD data)
 
 static const WORD timer_num[] = { 13, 8, 5, 4 };
 
-void xbtimer(WORD timer, WORD control, WORD data, LONG vector)
+void __CDECL xbtimer(WORD timer, WORD control, WORD data, LONG vector)
 {
     if(timer < 0 || timer > 3) return;
     setup_timer(MFP_BASE,timer, control, data);

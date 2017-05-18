@@ -16,6 +16,6 @@ extern WORD     appl_msg[8];
 
 void ct_chgown(AESPD *mpd, GRECT *pr);
 void ct_mouse(WORD grabit);
-void ctlmgr(void);
+void __CDECL ctlmgr(void);
 
 #endif

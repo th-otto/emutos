@@ -28,23 +28,23 @@ extern LONG flop_mediach(WORD dev);
 
 /* xbios functions */
 
-extern LONG floprd(UBYTE *buf, LONG filler, WORD dev,
+extern LONG __CDECL floprd(UBYTE *buf, LONG filler, WORD dev,
                    WORD sect, WORD track, WORD side, WORD count);
-extern LONG flopwr(const UBYTE *buf, LONG filler, WORD dev,
+extern LONG __CDECL flopwr(const UBYTE *buf, LONG filler, WORD dev,
                    WORD sect, WORD track, WORD side, WORD count);
-extern LONG flopfmt(UBYTE *buf, WORD *skew, WORD dev, WORD spt,
+extern LONG __CDECL flopfmt(UBYTE *buf, WORD *skew, WORD dev, WORD spt,
                     WORD track, WORD side, WORD interleave,
                     ULONG magic, WORD virgin);
-extern void protobt(UBYTE *buf, LONG serial, WORD type, WORD exec);
-extern LONG flopver(WORD *buf, LONG filler, WORD dev,
+extern void __CDECL protobt(UBYTE *buf, LONG serial, WORD type, WORD exec);
+extern LONG __CDECL flopver(WORD *buf, LONG filler, WORD dev,
                     WORD sect, WORD track, WORD side, WORD count);
-extern LONG floprate(WORD dev, WORD rate);
+extern LONG __CDECL floprate(WORD dev, WORD rate);
 
 #if CONF_WITH_FDC
 
 /* internal functions */
 
-extern void flopvbl(void);
+extern void __CDECL flopvbl(void);
 
 #endif /* CONF_WITH_FDC */
 

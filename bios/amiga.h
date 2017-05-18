@@ -92,9 +92,9 @@ void amiga_rs232_rbf_interrupt(void);
 
 /* The following functions are defined in amiga2.S */
 
-void amiga_init_keyboard_interrupt(void);
-void amiga_vbl(void);
-void amiga_int_5(void);
+void __CDECL amiga_init_keyboard_interrupt(void);
+void __CDECL amiga_vbl(void);
+void __CDECL amiga_int_5(void);
 
 #endif /* MACHINE_AMIGA */
 

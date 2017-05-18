@@ -94,24 +94,24 @@ struct keytbl {
 extern void kbd_init(void);
 
 /* called by ikbdvec to handle key events */
-extern void kbd_int(UBYTE scancode);
+extern void __CDECL kbd_int(UBYTE scancode);
 
 /* called by timer C int to handle key repeat */
-extern void kb_timerc_int(void);
+extern void __CDECL kb_timerc_int(void);
 
 /* some bios functions */
-extern LONG bconstat2(void);
-extern LONG bconin2(void);
-extern LONG bcostat4(void);
-extern LONG bconout4(WORD dev, WORD c);
-extern LONG kbshift(WORD flag);
+extern LONG __CDECL bconstat2(void);
+extern LONG __CDECL bconin2(void);
+extern LONG __CDECL bcostat4(void);
+extern LONG __CDECL bconout4(WORD dev, WORD c);
+extern LONG __CDECL kbshift(WORD flag);
 
 /* some xbios functions */
-extern LONG keytbl(const UBYTE* norm, const UBYTE* shft, const UBYTE* caps);
-extern WORD kbrate(WORD initial, WORD repeat);
-extern void bioskeys(void);
+extern LONG __CDECL keytbl(const UBYTE* norm, const UBYTE* shft, const UBYTE* caps);
+extern WORD __CDECL kbrate(WORD initial, WORD repeat);
+extern void __CDECL bioskeys(void);
 
-extern void ikbdws(WORD cnt, const UBYTE *ptr);
+extern void __CDECL ikbdws(WORD cnt, const UBYTE *ptr);
 extern void ikbd_writeb(UBYTE b);
 extern void ikbd_writew(WORD w);
 
@@ -120,12 +120,12 @@ extern void push_ascii_ikbdiorec(UBYTE ascii);
 #endif
 
 /* the following is in aciavecs.S */
-extern void call_mousevec(UBYTE *packet);
+extern void __CDECL call_mousevec(UBYTE *packet);
 #ifdef MACHINE_AMIGA
-extern void call_joyvec(UBYTE *packet);
+extern void __CDECL call_joyvec(UBYTE *packet);
 #endif
 #if CONF_WITH_FLEXCAN || CONF_SERIAL_IKBD
-void call_ikbdraw(UBYTE b);
+void __CDECL call_ikbdraw(UBYTE b);
 #endif
 
 #endif /* IKBD_H */

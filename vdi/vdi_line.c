@@ -15,11 +15,11 @@
 #include "../bios/lineavars.h"
 
 
-extern void linea_rect(void);     /* called only from linea.S */
-extern void linea_hline(void);    /* called only from linea.S */
-extern void linea_polygon(void);  /* called only from linea.S */
-extern void linea_line(void);     /* called only from linea.S */
-extern void linea_fill(void);     /* called only from linea.S */
+extern void __CDECL linea_rect(void);     /* called only from linea.S */
+extern void __CDECL linea_hline(void);    /* called only from linea.S */
+extern void __CDECL linea_polygon(void);  /* called only from linea.S */
+extern void __CDECL linea_line(void);     /* called only from linea.S */
+extern void __CDECL linea_fill(void);     /* called only from linea.S */
 
 
 #define ABS(x) ((x) >= 0 ? (x) : -(x))
@@ -436,7 +436,7 @@ static void lineA2Attrib(VwkAttrib *attr)
 /*
  * Line-A wrapper for draw_rect_common
  */
-void linea_rect(void)
+void __CDECL linea_rect(void)
 {
     VwkAttrib attr;
     Rect line;
@@ -460,7 +460,7 @@ void linea_rect(void)
 /*
  * Line-A wrapper for horizontal line
  */
-void linea_hline(void)
+void __CDECL linea_hline(void)
 {
     WORD clip = CLIP, y2 = Y2;
     CLIP = 0; Y2 = Y1;
@@ -472,7 +472,7 @@ void linea_hline(void)
 /*
  * Line-A wrapper for clc_flit
  */
-void linea_polygon(void)
+void __CDECL linea_polygon(void)
 {
     VwkClip clipper;
     Point *points = (Point*) PTSIN;
@@ -496,7 +496,7 @@ void linea_polygon(void)
 /*
  * Line-A wrapper for floodfill
  */
-void linea_fill(void)
+void __CDECL linea_fill(void)
 {
     VwkClip clipper;
     VwkAttrib attr;
@@ -1475,7 +1475,7 @@ void abline (const Line * line, WORD wrt_mode, UWORD color)
 /*
  * Line-A wrapper for line drawing with abline
  */
-void linea_line(void)
+void __CDECL linea_line(void)
 {
     Line line;
 

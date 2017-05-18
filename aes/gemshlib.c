@@ -77,9 +77,9 @@ GLOBAL WORD gl_changerez;
 GLOBAL WORD gl_nextrez;
 
 /* Prototypes: */
-extern void deskstart(void) NORETURN;   /* see ../desk/deskstart.S */
+extern void __CDECL deskstart(void) NORETURN;   /* see ../desk/deskstart.S */
 #if WITH_CLI != 0
-extern void coma_start(void) NORETURN;  /* see cli/cmdasm.S */
+extern void __CDECL coma_start(void) NORETURN;  /* see cli/cmdasm.S */
 #endif
 
 static void sh_toalpha(void);
@@ -522,7 +522,7 @@ static void sh_chdef(SHELL *psh,BOOL isgem)
 }
 
 
-void aes_run_rom_program(PRG_ENTRY *entry)
+void aes_run_rom_program(PRG_ENTRY entry)
 {
     PD *pd;     /* this is the BDOS PD structure, not the AESPD */
 

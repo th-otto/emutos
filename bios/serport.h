@@ -68,21 +68,21 @@ typedef struct {
 /*
  * external references
  */
-extern ULONG (*rsconfptr)(WORD,WORD,WORD,WORD,WORD,WORD);
+extern ULONG (__CDECL *rsconfptr)(WORD,WORD,WORD,WORD,WORD,WORD);
 extern EXT_IOREC *rs232iorecptr;
 
 /*
  * function prototypes
  */
-LONG bconstat1(void);
-LONG bconin1(void);
-LONG bcostat1(void);
-LONG bconout1(WORD,WORD);
-ULONG rsconf1(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr);
+LONG __CDECL bconstat1(void);
+LONG __CDECL bconin1(void);
+LONG __CDECL bcostat1(void);
+LONG __CDECL bconout1(WORD,WORD);
+ULONG __CDECL rsconf1(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr);
 void init_serport(void);
 
 #if CONF_WITH_SCC
-LONG bconoutB(WORD,WORD);
+LONG __CDECL bconoutB(WORD,WORD);
 #endif
 
 #if BCONMAP_AVAILABLE
@@ -90,11 +90,11 @@ LONG bconoutB(WORD,WORD);
  * Bconmap() stuff
  */
 typedef struct {        /* one per mappable device */
-    LONG (*Bconstat)(void);
-    LONG (*Bconin)(void);
-    LONG (*Bcostat)(void);
-    LONG (*Bconout)(WORD,WORD);
-    ULONG (*Rsconf)(WORD,WORD,WORD,WORD,WORD,WORD);
+    LONG (__CDECL *Bconstat)(void);
+    LONG (__CDECL *Bconin)(void);
+    LONG (__CDECL *Bcostat)(void);
+    LONG (__CDECL *Bconout)(WORD,WORD);
+    ULONG (__CDECL *Rsconf)(WORD,WORD,WORD,WORD,WORD,WORD);
     EXT_IOREC *Iorec;   /* points to IOREC and extended IOREC */
 } MAPTAB;
 
@@ -115,6 +115,6 @@ extern BCONMAP bconmap_root;
 /*
  * function prototypes
  */
-LONG bconmap(WORD);
+LONG __CDECL bconmap(WORD);
 
 #endif  /* _SERPORT_H */

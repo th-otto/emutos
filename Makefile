@@ -131,7 +131,8 @@ PCREL_LDFLAGS = -Wl,--oformat=binary,-Ttext=0,--entry=0
 CC = $(TOOLCHAIN_PREFIX)gcc
 CPP = $(CC) -E
 CPUFLAGS = -m68000
-MULTILIBFLAGS = $(CPUFLAGS) -mshort
+MFASTCALL := $(shell if $(CC) -mfastcall -E - < /dev/null >/dev/null 2>&1; then echo -mfastcall; fi)
+MULTILIBFLAGS = $(CPUFLAGS) -mshort $(MFASTCALL)
 INC = -Iinclude
 OTHERFLAGS = -fomit-frame-pointer -fno-common
 

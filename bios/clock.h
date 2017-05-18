@@ -37,7 +37,7 @@ extern void clock_init(void);
 
 /* xbios functions */
 
-extern void settime(LONG time);
-extern LONG gettime(void);
+extern void __CDECL settime(LONG time);
+extern LONG __CDECL gettime(void);
 
 #endif /* CLOCK_H */

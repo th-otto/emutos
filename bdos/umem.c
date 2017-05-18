@@ -112,7 +112,7 @@ static MPB *find_mpb(void *addr)
 /*
  *  xmalloc - Function 0x48 (Malloc)
  */
-void *xmalloc(long amount)
+void *__CDECL xmalloc(long amount)
 {
     void *rc;
 
@@ -133,7 +133,7 @@ void *xmalloc(long amount)
 /*
  *  xmfree - Function 0x49 (Mfree)
  */
-long xmfree(void *addr)
+long __CDECL xmfree(void *addr)
 {
     MD *p;
     MPB *mpb;
@@ -168,7 +168,7 @@ long xmfree(void *addr)
  *  blk - addr of block to free
  *  len - length of block to free
  */
-long xsetblk(int n, void *blk, long len)
+long __CDECL xsetblk(int n, void *blk, long len)
 {
     MD *p;
     MPB *mpb;
@@ -229,7 +229,7 @@ long xsetblk(int n, void *blk, long len)
 /*
  *  xmxalloc - Function 0x44 (Mxalloc)
  */
-void *xmxalloc(long amount, int mode)
+void *__CDECL xmxalloc(long amount, int mode)
 {
     MD *m;
     void *ret_value;
@@ -349,7 +349,7 @@ ret:
  *  of screen during the boot process.
  */
 extern UBYTE *v_bas_ad;
-void *srealloc(long amount)
+void *__CDECL srealloc(long amount)
 {
     if (amount < 0L)
         return xmxalloc(-1L, MX_STRAM);
@@ -380,7 +380,7 @@ void *srealloc(long amount)
  * to specifically request alternative RAM.
  */
 
-long xmaddalt(UBYTE *start, LONG size)
+long __CDECL xmaddalt(UBYTE *start, LONG size)
 {
     MD *md, *p;
 

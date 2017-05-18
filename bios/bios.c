@@ -78,19 +78,19 @@
 /*==== External declarations ==============================================*/
 
 #if STONX_NATIVE_PRINT
-extern void stonx_kprintf_init(void);
+extern void __CDECL stonx_kprintf_init(void);
 #endif
 
 #if CONF_WITH_CARTRIDGE
-extern void run_cartridge_applications(WORD typebit); /* found in startup.S */
+extern void __CDECL run_cartridge_applications(WORD typebit); /* found in startup.S */
 #endif
 
 #if WITH_CLI
-extern void coma_start(void) NORETURN;  /* found in cli/cmdasm.S */
+extern void __CDECL coma_start(void) NORETURN;  /* found in cli/cmdasm.S */
 #endif
 
 #if CONF_WITH_ALT_RAM
-extern long xmaddalt(UBYTE *start, long size); /* found in bdos/mem.h */
+extern long __CDECL xmaddalt(UBYTE *start, long size); /* found in bdos/mem.h */
 #endif
 
 /*==== Declarations =======================================================*/
@@ -108,7 +108,7 @@ UBYTE bootflags;
 
 /* Non-Atari hardware vectors */
 #if !CONF_WITH_MFP
-void (*vector_5ms)(void);       /* 200 Hz system timer */
+void (__CDECL *vector_5ms)(void);       /* 200 Hz system timer */
 #endif
 
 /*==== BOOT ===============================================================*/
@@ -149,7 +149,7 @@ static void vecs_init(void)
      * divides. So we keep the default panic() behaviour in such case. */
 #else
     /* Original TOS cowardly ignores integer divide by zero. */
-    VEC_DIVNULL = just_rte;
+    VEC_DIVNULL = (PFVOID)just_rte;
 #endif
 
     /* initialise some vectors we really need */
@@ -258,9 +258,9 @@ static void bios_init(void)
     dumpflg = -1;
     sysbase = (LONG) os_entry;
     savptr = (LONG) trap_save_area;
-    etv_timer = (void(*)(int)) just_rts;
+    etv_timer = (void(__CDECL *)(int)) just_rts;
     etv_critic = default_etv_critic;
-    etv_term = just_rts;
+    etv_term = (void(__CDECL *)(void)) just_rts;
 
     /* setup VBL queue */
     nvbls = 8;
@@ -594,7 +594,7 @@ BOOL can_shutdown(void)
  * exec the user interface (shell or AES)
  */
 
-void biosmain(void)
+void __CDECL biosmain(void)
 {
     BOOL show_initinfo;         /* TRUE if welcome screen must be displayed */
     BYTE *p;
@@ -715,7 +715,7 @@ void biosmain(void)
  */
 
 #if DBGBIOS
-static void bios_0(MPB *mpb)
+static void __CDECL bios_0(MPB *mpb)
 {
     getmpb(mpb);
 }
@@ -734,7 +734,7 @@ static void bios_0(MPB *mpb)
  *   0  device is not ready
  */
 
-LONG bconstat(WORD handle)        /* GEMBIOS character_input_status */
+LONG __CDECL bconstat(WORD handle)        /* GEMBIOS character_input_status */
 {
 #if BCONMAP_AVAILABLE
     WORD map_index;
@@ -757,7 +757,7 @@ LONG bconstat(WORD handle)        /* GEMBIOS character_input_status */
 }
 
 #if DBGBIOS
-static LONG bios_1(WORD handle)
+static LONG __CDECL bios_1(WORD handle)
 {
     return bconstat(handle);
 }
@@ -778,7 +778,7 @@ static LONG bios_1(WORD handle)
  * returns the character in the low byte.
  */
 
-LONG bconin(WORD handle)
+LONG __CDECL bconin(WORD handle)
 {
 #if BCONMAP_AVAILABLE
     WORD map_index;
@@ -801,7 +801,7 @@ LONG bconin(WORD handle)
 }
 
 #if DBGBIOS
-static LONG bios_2(WORD handle)
+static LONG __CDECL bios_2(WORD handle)
 {
     return bconin(handle);
 }
@@ -811,7 +811,7 @@ static LONG bios_2(WORD handle)
  * bconout  - Print character to output device
  */
 
-LONG bconout(WORD handle, WORD what)
+LONG __CDECL bconout(WORD handle, WORD what)
 {
 #if BCONMAP_AVAILABLE
     WORD map_index;
@@ -834,7 +834,7 @@ LONG bconout(WORD handle, WORD what)
 }
 
 #if DBGBIOS
-static LONG bios_3(WORD handle, WORD what)
+static LONG __CDECL bios_3(WORD handle, WORD what)
 {
     return bconout(handle, what);
 }
@@ -865,13 +865,13 @@ void bconout_str(WORD handle, const char* str)
  * drive = drive #: 0 = A:, 1 = B:, etc
  */
 
-LONG lrwabs(WORD r_w, UBYTE *adr, WORD numb, WORD first, WORD drive, LONG lfirst)
+LONG __CDECL lrwabs(WORD r_w, UBYTE *adr, WORD numb, WORD first, WORD drive, LONG lfirst)
 {
     return protect_wlwwwl((PFLONG)hdv_rw, r_w, (LONG)adr, numb, first, drive, lfirst);
 }
 
 #if DBGBIOS
-static LONG bios_4(WORD r_w, UBYTE *adr, WORD numb, WORD first, WORD drive, LONG lfirst)
+static LONG __CDECL bios_4(WORD r_w, UBYTE *adr, WORD numb, WORD first, WORD drive, LONG lfirst)
 {
     LONG ret;
     KDEBUG(("BIOS rwabs(rw = %d, addr = %p, count = 0x%04x, "
@@ -890,7 +890,7 @@ static LONG bios_4(WORD r_w, UBYTE *adr, WORD numb, WORD first, WORD drive, LONG
  *
  */
 
-LONG setexc(WORD num, LONG vector)
+LONG __CDECL setexc(WORD num, LONG vector)
 {
     LONG oldvector;
     LONG *addr = (LONG *) (4L * num);
@@ -903,7 +903,7 @@ LONG setexc(WORD num, LONG vector)
 }
 
 #if DBGBIOS
-static LONG bios_5(WORD num, LONG vector)
+static LONG __CDECL bios_5(WORD num, LONG vector)
 {
     LONG ret = setexc(num, vector);
     KDEBUG(("Bios 5: Setexc(num = 0x%x, vector = %p)\n", num, (void*)vector));
@@ -916,13 +916,13 @@ static LONG bios_5(WORD num, LONG vector)
  * tickcal - Time between two systemtimer calls
  */
 
-LONG tickcal(void)
+LONG __CDECL tickcal(void)
 {
     return(20L);        /* system timer is 50 Hz so 20 ms is the period */
 }
 
 #if DBGBIOS
-static LONG bios_6(void)
+static LONG __CDECL bios_6(void)
 {
     return tickcal();
 }
@@ -940,13 +940,13 @@ static LONG bios_6(void)
  *  drive - drive  (0 = A:, 1 = B:, etc)
  */
 
-LONG getbpb(WORD drive)
+LONG __CDECL getbpb(WORD drive)
 {
     return protect_w(hdv_bpb, drive);
 }
 
 #if DBGBIOS
-static LONG bios_7(WORD drive)
+static LONG __CDECL bios_7(WORD drive)
 {
     return getbpb(drive);
 }
@@ -963,7 +963,7 @@ static LONG bios_7(WORD drive)
 
 /* handle  = 0:PRT 1:AUX 2:CON 3:MID 4:KEYB */
 
-LONG bcostat(WORD handle)       /* GEMBIOS character_output_status */
+LONG __CDECL bcostat(WORD handle)       /* GEMBIOS character_output_status */
 {
 #if BCONMAP_AVAILABLE
     WORD map_index;
@@ -986,7 +986,7 @@ LONG bcostat(WORD handle)       /* GEMBIOS character_output_status */
 }
 
 #if DBGBIOS
-static LONG bios_8(WORD handle)
+static LONG __CDECL bios_8(WORD handle)
 {
     return bcostat(handle);
 }
@@ -1004,13 +1004,13 @@ static LONG bios_8(WORD handle)
  * where "changed" = "removed"
  */
 
-LONG mediach(WORD drv)
+LONG __CDECL mediach(WORD drv)
 {
     return protect_w(hdv_mediach, drv);
 }
 
 #if DBGBIOS
-static LONG bios_9(WORD drv)
+static LONG __CDECL bios_9(WORD drv)
 {
     return mediach(drv);
 }
@@ -1026,13 +1026,13 @@ static LONG bios_9(WORD drv)
  * present.
  */
 
-LONG drvmap(void)
+LONG __CDECL drvmap(void)
 {
     return blkdev_drvmap();
 }
 
 #if DBGBIOS
-static LONG bios_a(void)
+static LONG __CDECL bios_a(void)
 {
     return drvmap();
 }
@@ -1055,7 +1055,7 @@ static LONG bios_a(void)
  */
 
 #if DBGBIOS
-static LONG bios_b(WORD flag)
+static LONG __CDECL bios_b(WORD flag)
 {
     return kbshift(flag);
 }

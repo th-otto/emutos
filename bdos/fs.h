@@ -365,29 +365,29 @@ long log_media(BPB *b, int drv);
  * in fshand.c
  */
 
-long xforce(int std, int h);
+long __CDECL xforce(int std, int h);
 long ixforce(int std, int h, PD *p);
 
 /* duplicate a file handle. */
-long xdup(int h);
+long __CDECL xdup(int h);
 
 /*
  * in fsopnclo.c
  */
 
 /* create file with specified name, attributes */
-long xcreat(char *name, char attr);
+long __CDECL xcreat(char *name, char attr);
 long ixcreat(char *name, char attr);
 
 /* open a file (path name) */
-long xopen(char *name, int mod);
+long __CDECL xopen(char *name, int mod);
 
 /* Close a file */
-long xclose(int h);
+long __CDECL xclose(int h);
 long ixclose(OFD *fd, int part);
 
 /* remove a file */
-long xunlink(char *name);
+long __CDECL xunlink(char *name);
 /* internal delete file. */
 long ixdel(DND *dn, FCB *f, long pos);
 
@@ -414,7 +414,7 @@ void clfix(CLNO cl, CLNO link, DMD *dm);
 CLNO getrealcl(CLNO cl, DMD *dm);
 CLNO getclnum(CLNO cl, OFD *of);
 int nextcl(OFD *p, int wrtflg);
-long xgetfree(long *buf, int drv);
+long __CDECL xgetfree(long *buf, int drv);
 
 /*
  * in fsio.c
@@ -424,30 +424,30 @@ long xgetfree(long *buf, int drv);
 long eof(int h);
 
 /* seek to byte position n on file with handle h */
-long xlseek(long n, int h, int flg);
+long __CDECL xlseek(long n, int h, int flg);
 long ixlseek(OFD *p, long n);
 
-long xread(int h, long len, void *ubufr);
+long __CDECL xread(int h, long len, void *ubufr);
 long ixread(OFD *p, long len, void *ubufr);
 
-long xwrite(int h, long len, void *ubufr);
+long __CDECL xwrite(int h, long len, void *ubufr);
 long ixwrite(OFD *p, long len, void *ubufr);
 
 /*
  * in fsdir.c
  */
 
-long xmkdir(char *s);
-long xrmdir(char *p);
-long xchmod(char *p, int wrt, char mod);
+long __CDECL xmkdir(char *s);
+long __CDECL xrmdir(char *p);
+long __CDECL xchmod(char *p, int wrt, char mod);
 long ixsfirst(char *name, WORD att, DTAINFO *addr);
-long xsfirst(char *name, int att);
-long xsnext(void);
-long xgsdtof(DOSTIME *buf, int h, int wrt);
+long __CDECL xsfirst(char *name, int att);
+long __CDECL xsnext(void);
+long __CDECL xgsdtof(DOSTIME *buf, int h, int wrt);
 void builds(const char *s1 , char *s2 );
-long xrename(int n, char *p1, char *p2);
-long xchdir(char *p);
-long xgetdir(char *buf, int drv);
+long __CDECL xrename(int n, char *p1, char *p2);
+long __CDECL xchdir(char *p);
+long __CDECL xgetdir(char *buf, int drv);
 FCB *dirinit(DND *dn);
 DND *findit(char *name, const char **sp, int dflag);
 FCB *scan(DND *dnd, const char *n, WORD att, LONG *posp);
@@ -460,10 +460,10 @@ WORD free_available_dnds(void);
 /*
  * in fsmain.c
  */
-DTAINFO *xgetdta(void);
-void xsetdta(DTAINFO *addr);
-long xsetdrv(int drv);
-long xgetdrv(void);
+DTAINFO *__CDECL xgetdta(void);
+void __CDECL xsetdta(DTAINFO *addr);
+long __CDECL xsetdrv(int drv);
+long __CDECL xgetdrv(void);
 OFD  *getofd(int h);
 
 

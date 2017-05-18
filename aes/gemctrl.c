@@ -311,7 +311,7 @@ void ct_mouse(WORD grabit)
  * This process never terminates and forms an integral part of
  * the system.
  */
-void ctlmgr(void)
+void __CDECL ctlmgr(void)
 {
     WORD    ev_which;
     WORD    rets[6];

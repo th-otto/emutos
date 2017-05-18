@@ -389,7 +389,7 @@
 /*
  *  xgetdta - Function 0x2F     f_getdta
  */
-DTAINFO *xgetdta(void)          /* return address of dta */
+DTAINFO *__CDECL xgetdta(void)          /* return address of dta */
 {
     return((DTAINFO *)run->p_xdta);
 }
@@ -398,7 +398,7 @@ DTAINFO *xgetdta(void)          /* return address of dta */
 /*
  *  xsetdta - Function 0x1A     f_setdta
  */
-void xsetdta(DTAINFO *addr)     /* set transfer address to addr */
+void __CDECL xsetdta(DTAINFO *addr)     /* set transfer address to addr */
 {
     run->p_xdta = (DTA *)addr;
 }
@@ -409,7 +409,7 @@ void xsetdta(DTAINFO *addr)     /* set transfer address to addr */
  *      ( 0 = A, etc )
  *      Function 0x0E   d_setdrv
  */
-long xsetdrv(int drv)
+long __CDECL xsetdrv(int drv)
 {
     long drvmap;
 
@@ -431,7 +431,7 @@ long xsetdrv(int drv)
  *
  *      Last modified   SCC     1 May 85
  */
-long xgetdrv(void)
+long __CDECL xgetdrv(void)
 {
     return run->p_curdrv;
 }

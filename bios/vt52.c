@@ -77,7 +77,7 @@ static void esc_ch1(WORD);
 static void get_row(WORD);
 static void get_column(WORD);
 
-void blink(void);
+void __CDECL blink(void);
 
 
 
@@ -956,7 +956,7 @@ ascii_lf (void)
  * This routine may trash registers, when called from assembler!
  */
 
-void
+void __CDECL
 blink (void)
 {
     /* test visibility/semaphore bit. */
@@ -1003,7 +1003,7 @@ blink (void)
  *   M_CVIS   - cursor visibility on
  */
 
-WORD
+WORD __CDECL
 cursconf(WORD function, WORD operand)
 {
     switch (function) {

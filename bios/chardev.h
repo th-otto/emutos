@@ -18,30 +18,30 @@
 
 
 /* Prototypes */
-LONG bconstat1(void);
-LONG bconstat2(void);
-LONG bconstat3(void);
+LONG __CDECL bconstat1(void);
+LONG __CDECL bconstat2(void);
+LONG __CDECL bconstat3(void);
 
-LONG bconin0(void);
-LONG bconin1(void);
-LONG bconin2(void);
-LONG bconin3(void);
+LONG __CDECL bconin0(void);
+LONG __CDECL bconin1(void);
+LONG __CDECL bconin2(void);
+LONG __CDECL bconin3(void);
 
-LONG bconout0(WORD, WORD);
-LONG bconout1(WORD, WORD);
-LONG bconout2(WORD, WORD);
-LONG bconout3(WORD, WORD);
-LONG bconout4(WORD, WORD);
-LONG bconout5(WORD, WORD);
+LONG __CDECL bconout0(WORD, WORD);
+LONG __CDECL bconout1(WORD, WORD);
+LONG __CDECL bconout2(WORD, WORD);
+LONG __CDECL bconout3(WORD, WORD);
+LONG __CDECL bconout4(WORD, WORD);
+LONG __CDECL bconout5(WORD, WORD);
 
-LONG bcostat0(void);
-LONG bcostat1(void);
-LONG bcostat2(void);
-LONG bcostat3(void);
-LONG bcostat4(void);
+LONG __CDECL bcostat0(void);
+LONG __CDECL bcostat1(void);
+LONG __CDECL bcostat2(void);
+LONG __CDECL bcostat3(void);
+LONG __CDECL bcostat4(void);
 
-LONG char_dummy(void);
-LONG charout_dummy(WORD dev, WORD x);
+LONG __CDECL char_dummy(void);
+LONG __CDECL charout_dummy(WORD dev, WORD x);
 
 
 /* internal init routine */

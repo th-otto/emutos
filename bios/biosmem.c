@@ -135,7 +135,7 @@ UBYTE *balloc_stram(ULONG size, BOOL top)
 
 extern MD themd;                /* BIOS memory descriptor */
 
-void getmpb(MPB * mpb)
+void __CDECL getmpb(MPB * mpb)
 {
 #if DBG_BALLOC
     bmem_allowed = FALSE; /* BIOS memory handling not allowed past this point */

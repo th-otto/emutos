@@ -79,7 +79,7 @@ static void sftdel(FTAB *sftp);
  *
  *  Error returns   EPTHNF, EACCDN, ENHNDL
  */
-long xcreat(char *name, char attr)
+long __CDECL xcreat(char *name, char attr)
 {
     return ixcreat(name, attr & ~FA_SUBDIR);
 }
@@ -213,7 +213,7 @@ long ixcreat(char *name, char attr)
  *
  *  +ve return      file handle
  */
-long xopen(char *name, int mod)
+long __CDECL xopen(char *name, int mod)
 {
     return ixopen(name, mod&VALID_FOPEN_BITS);
 }
@@ -390,7 +390,7 @@ static void sftdel(FTAB *sftp)
  *          operations inside the 'if' statement following the invocation
  *          of ixclose(), but I am leaving the flow of control intact.
  */
-long xclose(int h)
+long __CDECL xclose(int h)
 {
     int h0;
     OFD *fd;
@@ -516,7 +516,7 @@ long ixclose(OFD *fd, int part)
  *
  *  returns     EFILNF, EACCDN, ixdel()
  */
-long xunlink(char *name)
+long __CDECL xunlink(char *name)
 {
     DND *dn;
     FCB *f;

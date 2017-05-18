@@ -77,13 +77,13 @@ UWORD current_time, current_date;
  */
 
 /* the address of the vector in TOS vars */
-extern void (*etv_timer)(int);
+extern void (__CDECL *etv_timer)(int);
 
 /*
  * private declarations
  */
 
-static void tikfrk(int n);
+static void __CDECL tikfrk(int n);
 
 static const BYTE nday_norm[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 static const BYTE nday_leap[] = {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -97,7 +97,7 @@ static int msec;
 /*
  * xgetdate - Function 0x2A:  Get date
  */
-long xgetdate(void)
+long __CDECL xgetdate(void)
 {
     return current_date;
 }
@@ -106,7 +106,7 @@ long xgetdate(void)
 /*
  * xsetdate - Function 0x2B:  Set date
  */
-long xsetdate(UWORD d)
+long __CDECL xsetdate(UWORD d)
 {
     UWORD curmo, day;
     const BYTE *nday = IS_A_LEAP_YEAR(d) ? nday_leap : nday_norm;
@@ -130,7 +130,7 @@ long xsetdate(UWORD d)
 /*
  * xgettime - Function 0x2C:  Get time
  */
-long xgettime(void)
+long __CDECL xgettime(void)
 {
     return current_time;
 }
@@ -140,7 +140,7 @@ long xgettime(void)
 /*
  * xsettime - Function 0x2D:  Set time
  */
-long xsettime(UWORD t)
+long __CDECL xsettime(UWORD t)
 {
     if (((t & SEC_BM) >= 30)                /* 30 "double-seconds" per minute */
      || ((t & MIN_BM) >= (60 << MIN_SHIFT)) /* 60 minutes per hour */
@@ -173,7 +173,7 @@ void time_init(void)
  *  tikfrk -
  */
 
-static void tikfrk(int n)
+static void __CDECL tikfrk(int n)
 {
     int curmo, newday;
     const BYTE *nday;

@@ -82,12 +82,12 @@ void initialise_falcon_palette(WORD mode);
 const VMODE_ENTRY *lookup_videl_mode(WORD mode,WORD monitor);
 
 /* Public XBIOS functions */
-WORD vsetmode(WORD mode);
-WORD vmontype(void);
-WORD vsetsync(WORD external);
-LONG vgetsize(WORD mode);
-WORD vsetrgb(WORD index,WORD count,const ULONG *rgb);
-WORD vgetrgb(WORD index,WORD count,ULONG *rgb);
+WORD __CDECL vsetmode(WORD mode);
+WORD __CDECL vmontype(void);
+WORD __CDECL vsetsync(WORD external);
+LONG __CDECL vgetsize(WORD mode);
+WORD __CDECL vsetrgb(WORD index,WORD count,const ULONG *rgb);
+WORD __CDECL vgetrgb(WORD index,WORD count,ULONG *rgb);
 
 /* misc routines */
 WORD get_videl_mode(void);

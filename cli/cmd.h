@@ -34,9 +34,9 @@
 /*
  * system calls
  */
-extern LONG jmp_gemdos(WORD, ...);
-extern LONG jmp_bios(WORD, ...);
-extern LONG jmp_xbios(WORD, ...);
+extern LONG __CDECL jmp_gemdos(WORD, ...);
+extern LONG __CDECL jmp_bios(WORD, ...);
+extern LONG __CDECL jmp_xbios(WORD, ...);
 
 #define jmp_gemdos_v(a)         jmp_gemdos((WORD)(a))
 #define jmp_gemdos_w(a,b)       jmp_gemdos((WORD)(a),(WORD)(b))

@@ -14,19 +14,19 @@
  * in a standard RTS stack frame, "in preparation for an RTS that
  * will start this process executing".
  */
-extern void psetup(AESPD *p, PFVOID codevalue);
+extern void __CDECL psetup(AESPD *p, PFVOID codevalue);
 
 /* launches the top of rlr list, as if called from within function
  * back(AESPD *top_of_rlr)
  */
-extern void gotopgm(void) /*NORETURN*/ ;
+extern void __CDECL gotopgm(void) /*NORETURN*/ ;
 
 /* called repeatedly to give hand to another process - actually a
  * wrapper around disp() in gemdisp.c
  */
-extern void dsptch(void);
+extern void __CDECL dsptch(void);
 
 /* called by disp() to end a dsptch ... switchto sequence */
-extern void switchto(UDA *puda) NORETURN ;
+extern void __CDECL switchto(UDA *puda) NORETURN ;
 
 #endif

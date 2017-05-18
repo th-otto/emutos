@@ -193,11 +193,18 @@ _init_acia_vecs:
 #endif /* CONF_WITH_IKBD_ACIA */
 
         // initialize the iorecs
+#ifdef __FASTCALL__
+        move.l  #(iorec_table_end-iorec_table),d0
+        lea     iorec_table,a1
+        lea     _ikbdiorec,a0
+        jsr     _memmove
+#else
         pea     iorec_table_end-iorec_table
         pea     iorec_table
         pea     _ikbdiorec
         jsr     _memmove
         lea     12(sp),sp
+#endif
 
         // initialize IKBD-related variables
         moveq.l #0,d0

@@ -45,7 +45,7 @@
  */
 
 #if DBG_XBIOS
-static void xbios_0(WORD type, struct param * param, PFVOID vec)
+static void __CDECL xbios_0(WORD type, struct param * param, PFVOID vec)
 {
     kprintf("XBIOS: Initmous\n");
     Initmous(type, param, vec);
@@ -73,7 +73,7 @@ static void xbios_0(WORD type, struct param * param, PFVOID vec)
  */
 
 #if DBG_XBIOS
-static const UBYTE *xbios_2(void)
+static const UBYTE __CDECL *xbios_2(void)
 {
     kprintf("XBIOS: Physbase ...\n");
     return physbase();
@@ -89,7 +89,7 @@ static const UBYTE *xbios_2(void)
  */
 
 #if DBG_XBIOS
-static UBYTE *xbios_3(void)
+static UBYTE __CDECL *xbios_3(void)
 {
     kprintf("XBIOS: Logbase ...\n");
     return logbase();
@@ -105,7 +105,7 @@ static UBYTE *xbios_3(void)
  */
 
 #if DBG_XBIOS
-static WORD xbios_4(void)
+static WORD __CDECL xbios_4(void)
 {
     kprintf("XBIOS: Getrez ...\n");
     return getrez();
@@ -125,7 +125,7 @@ static WORD xbios_4(void)
  */
 
 #if DBG_XBIOS
-static void xbios_5(UBYTE *logLoc, const UBYTE *physLoc, WORD rez, WORD videlmode)
+static void __CDECL xbios_5(UBYTE *logLoc, const UBYTE *physLoc, WORD rez, WORD videlmode)
 {
     kprintf("XBIOS: SetScreen(log = %p, phys = %p, rez = 0x%04x)\n",
            logLoc, physLoc, rez);
@@ -144,7 +144,7 @@ static void xbios_5(UBYTE *logLoc, const UBYTE *physLoc, WORD rez, WORD videlmod
  */
 
 #if DBG_XBIOS
-static void xbios_6(const UWORD *palettePtr)
+static void __CDECL xbios_6(const UWORD *palettePtr)
 {
     kprintf("XBIOS: SetPalette(%p)\n", palettePtr);
     setpalette(palettePtr);
@@ -164,7 +164,7 @@ static void xbios_6(const UWORD *palettePtr)
  */
 
 #if DBG_XBIOS
-static WORD xbios_7(WORD colorNum, WORD color)
+static WORD __CDECL xbios_7(WORD colorNum, WORD color)
 {
     kprintf("XBIOS: Setcolor(0x%04x, 0x%04x)\n", colorNum, color);
     return setcolor(colorNum, color);
@@ -192,7 +192,7 @@ static WORD xbios_7(WORD colorNum, WORD color)
  */
 
 #if DBG_XBIOS
-static LONG xbios_8(UBYTE *buf, LONG filler, WORD devno, WORD sectno,
+static LONG __CDECL xbios_8(UBYTE *buf, LONG filler, WORD devno, WORD sectno,
                     WORD trackno, WORD sideno, WORD count)
 {
     kprintf("XBIOS: Floprd()\n");
@@ -215,7 +215,7 @@ static LONG xbios_8(UBYTE *buf, LONG filler, WORD devno, WORD sectno,
 
 
 #if DBG_XBIOS
-static LONG xbios_9(const UBYTE *buf, LONG filler, WORD devno, WORD sectno,
+static LONG __CDECL xbios_9(const UBYTE *buf, LONG filler, WORD devno, WORD sectno,
                     WORD trackno, WORD sideno, WORD count)
 {
     kprintf("XBIOS: Flopwr()\n");
@@ -258,7 +258,7 @@ static LONG xbios_9(const UBYTE *buf, LONG filler, WORD devno, WORD sectno,
  */
 
 #if DBG_XBIOS
-static LONG xbios_a(UBYTE *buf, WORD *skew, WORD devno, WORD spt,
+static LONG __CDECL xbios_a(UBYTE *buf, WORD *skew, WORD devno, WORD spt,
                     WORD trackno, WORD sideno, WORD interlv, WORD virgin,
                     LONG magic)
 {
@@ -285,7 +285,7 @@ static LONG xbios_a(UBYTE *buf, WORD *skew, WORD devno, WORD spt,
  */
 
 #if DBG_XBIOS
-static void xbios_c(WORD cnt, const UBYTE *ptr)
+static void __CDECL xbios_c(WORD cnt, const UBYTE *ptr)
 {
     kprintf("XBIOS: Midiws(0x%04x, %p)\n", cnt, (UBYTE *)ptr);
     midiws(cnt, ptr);
@@ -304,7 +304,7 @@ static void xbios_c(WORD cnt, const UBYTE *ptr)
 
 
 #if DBG_XBIOS
-static void xbios_d(WORD interno, LONG vector)
+static void __CDECL xbios_d(WORD interno, LONG vector)
 {
     kprintf("XBIOS: Mfpint(0x%x, 0x%08lx)\n", interno, vector);
     mfpint(interno, vector);
@@ -318,7 +318,7 @@ static void xbios_d(WORD interno, LONG vector)
  * xbios_e - (iorec) Returns pointer to a serial device's input buffer record.
  */
 
-static LONG iorec(WORD devno)
+static LONG __CDECL iorec(WORD devno)
 {
     switch(devno) {
     case 0:
@@ -333,7 +333,7 @@ static LONG iorec(WORD devno)
 }
 
 #if DBG_XBIOS
-static LONG xbios_e(WORD devno)
+static LONG __CDECL xbios_e(WORD devno)
 {
     LONG ret;
     kprintf("XBIOS: Iorec(%d)\n", devno);
@@ -358,13 +358,13 @@ static LONG xbios_e(WORD devno)
  * tsr    - 68901 register
  * scr    - 68901 register
  */
-static ULONG rsconf(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
+static ULONG __CDECL rsconf(WORD baud, WORD ctrl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
 {
     return (*rsconfptr)(baud, ctrl, ucr, rsr, tsr, scr);
 }
 
 #if DBG_XBIOS
-static ULONG xbios_f(WORD speed, WORD flowctl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
+static ULONG __CDECL xbios_f(WORD speed, WORD flowctl, WORD ucr, WORD rsr, WORD tsr, WORD scr)
 {
     kprintf("XBIOS: Rsconf(...)\n");
     return rsconf(speed, flowctl, ucr, rsr, tsr, scr);
@@ -385,7 +385,7 @@ static ULONG xbios_f(WORD speed, WORD flowctl, WORD ucr, WORD rsr, WORD tsr, WOR
  */
 
 #if DBG_XBIOS
-static LONG xbios_10(const UBYTE* unshift, const UBYTE* shift, const UBYTE* capslock)
+static LONG __CDECL xbios_10(const UBYTE* unshift, const UBYTE* shift, const UBYTE* capslock)
 {
     kprintf("XBIOS: Keytbl(%p, %p, %p)\n",
             unshift, shift, capslock);
@@ -403,7 +403,7 @@ static LONG xbios_10(const UBYTE* unshift, const UBYTE* shift, const UBYTE* caps
 
 static ULONG rseed;
 
-static LONG random(void)
+static LONG __CDECL random(void)
 {
     if(rseed == 0) {
         rseed = hz_200 << 16;
@@ -415,7 +415,7 @@ static LONG random(void)
 }
 
 #if DBG_XBIOS
-static LONG xbios_11(void)
+static LONG __CDECL xbios_11(void)
 {
     kprintf("XBIOS: Random()\n");
     return random();
@@ -444,7 +444,7 @@ static LONG xbios_11(void)
  */
 
 #if DBG_XBIOS
-static void xbios_12(UBYTE *buf, LONG serialno, WORD disktype, WORD execflag)
+static void __CDECL xbios_12(UBYTE *buf, LONG serialno, WORD disktype, WORD execflag)
 {
     kprintf("XBIOS: Protobt()\n");
     protobt(buf, serialno, disktype, execflag);
@@ -458,7 +458,7 @@ static void xbios_12(UBYTE *buf, LONG serialno, WORD disktype, WORD execflag)
  */
 
 #if DBG_XBIOS
-static LONG xbios_13(WORD *buf, LONG filler, WORD devno, WORD sectno,
+static LONG __CDECL xbios_13(WORD *buf, LONG filler, WORD devno, WORD sectno,
                      WORD trackno, WORD sideno, WORD count)
 {
     kprintf("XBIOS: Flopver()\n");
@@ -481,7 +481,7 @@ static LONG xbios_13(WORD *buf, LONG filler, WORD devno, WORD sectno,
  */
 
 #if DBG_XBIOS
-static WORD xbios_15(WORD function, WORD operand)
+static WORD __CDECL xbios_15(WORD function, WORD operand)
 {
     kprintf("XBIOS: Cursconf( 0x%04x, 0x%04x )\n", function, operand);
     return cursconf(function, operand);
@@ -498,7 +498,7 @@ static WORD xbios_15(WORD function, WORD operand)
  */
 
 #if DBG_XBIOS
-static void xbios_16(ULONG datetime)
+static void __CDECL xbios_16(ULONG datetime)
 {
     kprintf("XBIOS: Settime()\n");
     settime(datetime);
@@ -515,7 +515,7 @@ static void xbios_16(ULONG datetime)
  */
 
 #if DBG_XBIOS
-static ULONG xbios_17(void)
+static ULONG __CDECL xbios_17(void)
 {
     kprintf("XBIOS: Gettime()\n");
     return gettime();
@@ -531,7 +531,7 @@ static ULONG xbios_17(void)
  */
 
 #if DBG_XBIOS
-static void xbios_18(void)
+static void __CDECL xbios_18(void)
 {
     kprintf("XBIOS: Bioskeys()\n");
     bioskeys();
@@ -545,7 +545,7 @@ static void xbios_18(void)
  */
 
 #if DBG_XBIOS
-static void xbios_19(WORD cnt, const UBYTE *ptr)
+static void __CDECL xbios_19(WORD cnt, const UBYTE *ptr)
 {
     kprintf("XBIOS: Ikbdws(0x%04x, %p)\n", cnt, (UBYTE *)ptr);
     ikbdws(cnt, ptr);
@@ -560,7 +560,7 @@ static void xbios_19(WORD cnt, const UBYTE *ptr)
  */
 
 #if DBG_XBIOS
-static void xbios_1a(WORD intno)
+static void __CDECL xbios_1a(WORD intno)
 {
     kprintf("XBIOS: Jdisint(0x%x)\n", intno);
     jdisint(intno);
@@ -574,7 +574,7 @@ static void xbios_1a(WORD intno)
  */
 
 #if DBG_XBIOS
-static void xbios_1b(WORD intno)
+static void __CDECL xbios_1b(WORD intno)
 {
     kprintf("XBIOS: Jenabint(0x%x)\n", intno);
     jenabint(intno);
@@ -589,7 +589,7 @@ static void xbios_1b(WORD intno)
  */
 
 #if DBG_XBIOS
-static BYTE xbios_1c(BYTE data, WORD regno)
+static BYTE __CDECL xbios_1c(BYTE data, WORD regno)
 {
     kprintf("XBIOS: Giaccess()\n");
     return giaccess(data, regno);
@@ -603,7 +603,7 @@ static BYTE xbios_1c(BYTE data, WORD regno)
  */
 
 #if DBG_XBIOS
-static void xbios_1d(WORD bitno)
+static void __CDECL xbios_1d(WORD bitno)
 {
     kprintf("XBIOS: Offgibit(%d)\n", bitno);
     offgibit(bitno);
@@ -617,7 +617,7 @@ static void xbios_1d(WORD bitno)
  */
 
 #if DBG_XBIOS
-static void xbios_1e(WORD bitno)
+static void __CDECL xbios_1e(WORD bitno)
 {
     kprintf("XBIOS: Ongibit(%d)\n", bitno);
     ongibit(bitno);
@@ -632,7 +632,7 @@ static void xbios_1e(WORD bitno)
  */
 
 #if DBG_XBIOS
-static void xbios_1f(WORD timer, WORD control, WORD data, LONG vec)
+static void __CDECL xbios_1f(WORD timer, WORD control, WORD data, LONG vec)
 {
     kprintf("XBIOS: xbtimer(%d, 0x%02x, 0x%02x, 0x%08lx)\n",
             timer, control, data, vec);
@@ -650,7 +650,7 @@ static void xbios_1f(WORD timer, WORD control, WORD data, LONG vec)
  */
 
 #if DBG_XBIOS
-static void xbios_20(LONG ptr)
+static void __CDECL xbios_20(LONG ptr)
 {
     kprintf("XBIOS: Dosound()\n");
     dosound(ptr);
@@ -674,13 +674,13 @@ static void xbios_20(LONG ptr)
  *
  */
 
-static LONG kbdvbase(void)
+static LONG __CDECL kbdvbase(void)
 {
     return (LONG) &kbdvecs;
 }
 
 #if DBG_XBIOS
-static LONG xbios_22(void)
+static LONG __CDECL xbios_22(void)
 {
     kprintf("XBIOS: Kbdvbase()\n");
     return kbdvbase();
@@ -694,7 +694,7 @@ static LONG xbios_22(void)
  */
 
 #if DBG_XBIOS
-static WORD xbios_23(WORD initial, WORD repeat)
+static WORD __CDECL xbios_23(WORD initial, WORD repeat)
 {
     kprintf("XBIOS: kbrate(%d, %d)\n", initial, repeat);
     return kbrate(initial, repeat);
@@ -715,7 +715,7 @@ static WORD xbios_23(WORD initial, WORD repeat)
  */
 
 #if DBG_XBIOS
-static void xbios_25(void)
+static void __CDECL xbios_25(void)
 {
     kprintf("XBIOS: Vsync()\n");
     vsync();
@@ -736,7 +736,7 @@ static void xbios_25(void)
  * function. For safety, we assume it can clobber all of them.
  */
 
-static LONG supexec(PFLONG codeptr)
+static LONG __CDECL supexec(PFLONG codeptr)
 {
     register LONG retval __asm__("d0");
 
@@ -755,7 +755,7 @@ static LONG supexec(PFLONG codeptr)
 }
 
 #if DBG_XBIOS
-static LONG xbios_26(PFLONG codeptr)
+static LONG __CDECL xbios_26(PFLONG codeptr)
 {
     kprintf("XBIOS: Supexec(%p)\n", codeptr);
     return supexec(codeptr);
@@ -779,7 +779,7 @@ static LONG xbios_26(PFLONG codeptr)
  */
 
 #if DBG_XBIOS
-static LONG xbios_29(WORD dev, WORD rate)
+static LONG __CDECL xbios_29(WORD dev, WORD rate)
 {
     kprintf("XBIOS: Floprate\n");
     return floprate(dev, rate);
@@ -791,7 +791,7 @@ static LONG xbios_29(WORD dev, WORD rate)
  */
 
 #if DBG_XBIOS
-static LONG xbios_2a(LONG sector, WORD count, UBYTE *buf, WORD major)
+static LONG __CDECL xbios_2a(LONG sector, WORD count, UBYTE *buf, WORD major)
 {
     kprintf("XBIOS: DMAread\n");
     return DMAread(sector, count, buf, major);
@@ -803,7 +803,7 @@ static LONG xbios_2a(LONG sector, WORD count, UBYTE *buf, WORD major)
  */
 
 #if DBG_XBIOS
-static LONG xbios_2b(LONG sector, WORD count, const UBYTE *buf, WORD major)
+static LONG __CDECL xbios_2b(LONG sector, WORD count, const UBYTE *buf, WORD major)
 {
     kprintf("XBIOS: DMAwrite\n");
     return DMAwrite(sector, count, buf, major);
@@ -815,7 +815,7 @@ static LONG xbios_2b(LONG sector, WORD count, const UBYTE *buf, WORD major)
  */
 
 #if DBG_XBIOS
-static LONG xbios_2c(WORD devno)
+static LONG __CDECL xbios_2c(WORD devno)
 {
     kprintf("XBIOS: Bconmap\n");
     return bconmap(devno);
@@ -829,7 +829,7 @@ static LONG xbios_2c(WORD devno)
  */
 
 #if DBG_XBIOS && CONF_WITH_NVRAM
-static WORD xbios_2e(WORD op, WORD start, WORD count, UBYTE *buffer)
+static WORD __CDECL xbios_2e(WORD op, WORD start, WORD count, UBYTE *buffer)
 {
     kprintf("XBIOS: NVMaccess\n");
     return nvmaccess(op, start, count, buffer);
@@ -852,7 +852,7 @@ static WORD blitmode(WORD mode)
 }
 
 #if DBG_XBIOS
-static WORD xbios_40(WORD mode)
+static WORD __CDECL xbios_40(WORD mode)
 {
     kprintf("XBIOS: Blitmode\n");
     return blitmode(mode);
@@ -863,7 +863,7 @@ static WORD xbios_40(WORD mode)
  * TT video
  */
 #if DBG_XBIOS && CONF_WITH_TT_SHIFTER
-static WORD xbios_50(WORD mode)
+static WORD __CDECL xbios_50(WORD mode)
 {
     kprintf("XBIOS: EsetShift\n");
     return esetshift(mode);
@@ -909,7 +909,7 @@ static WORD xbios_57(WORD mode)
  * Falcon video
  */
 #if DBG_XBIOS & CONF_WITH_VIDEL
-static WORD xbios_58(WORD mode)
+static WORD __CDECL xbios_58(WORD mode)
 {
     kprintf("XBIOS: Vsetmode\n");
     return vsetmode(mode);
@@ -942,7 +942,7 @@ static void xbios_5e(WORD index,WORD count,ULONG *rgb)
 #endif
 
 #if DBG_XBIOS & CONF_WITH_DMASOUND
-static LONG xbios_80(void)
+static LONG __CDECL xbios_80(void)
 {
     kprintf("XBIOS: Locksnd\n");
     return locksnd();
@@ -1022,7 +1022,7 @@ static LONG xbios_8d(LONG sptr)
  * with the function number passed as parameter.
  */
 
-LONG xbios_do_unimpl(WORD number)
+LONG __CDECL xbios_do_unimpl(WORD number)
 {
 #if DBG_XBIOS
     kprintf("unimplemented XBIOS function 0x%02x\n", number);
@@ -1030,7 +1030,7 @@ LONG xbios_do_unimpl(WORD number)
     return number;
 }
 
-extern LONG xbios_unimpl(void);
+extern LONG __CDECL xbios_unimpl(void);
 
 
 /*

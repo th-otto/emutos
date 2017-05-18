@@ -57,15 +57,15 @@ void osmem_init(void);
  */
 
 /* allocate memory */
-void *xmalloc(long amount);
+void *__CDECL xmalloc(long amount);
 /* mfree */
-long xmfree(void *addr);
+long __CDECL xmfree(void *addr);
 /* mshrink */
-long xsetblk(int n, void *blk, long len);
+long __CDECL xsetblk(int n, void *blk, long len);
 /* mxalloc */
-void *xmxalloc(long amount, int mode);
+void *__CDECL xmxalloc(long amount, int mode);
 /* srealloc */
-void *srealloc(long amount);
+void *__CDECL srealloc(long amount);
 
 /* supported values for Mxalloc mode: */
 #define MX_STRAM 0
@@ -76,7 +76,7 @@ void *srealloc(long amount);
 
 #if CONF_WITH_ALT_RAM
 /* declare additional memory */
-long xmaddalt(UBYTE *start, long size);
+long __CDECL xmaddalt(UBYTE *start, long size);
 long total_alt_ram(void);
 #endif /* CONF_WITH_ALT_RAM */
 

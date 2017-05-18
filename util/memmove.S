@@ -71,29 +71,44 @@
 
 _memcpy:
 #ifndef __mcoldfire__
-        move.l   8(sp),a0        // load source pointer
-        move.l   4(sp),a1        // load destination pointer
+#ifndef __FASTCALL__
+        move.l   8(sp),a1        // load source pointer
+        move.l   4(sp),a0        // load destination pointer
         move.l   12(sp),d0       // get length
+#endif
+        move.l   a0,d1
         cmpi.l   #BREAKEVEN,d0   // is it worth doing the complicated version?
         bge      memmove         // yes, branch
         bra      sdecr
 sloop:
-        move.b   (a0)+,(a1)+
+        move.b   (a1)+,(a0)+
 sdecr:
         dbra     d0,sloop
-        move.l   4(sp),d0        // return destination pointer
+#ifdef __FASTCALL__
+        move.l   d1,a0           // return destination pointer
+#else
+        move.l   d1,d0           // return destination pointer
+#endif
         rts
 #endif
 _memmove:
-        move.l   8(sp),a0        // load source pointer
-        move.l   4(sp),a1        // load destination pointer
+#ifndef __FASTCALL__
+        move.l   8(sp),a1        // load source pointer
+        move.l   4(sp),a0        // load destination pointer
+        move.l   12(sp),d0       // size
+#endif
 memmove:
-        cmp.l    a1,a0
+        move.l   d2,-(sp)
+#ifdef __FASTCALL__
+        move.l   a0,-(sp)
+#endif
+        move.l   d0,d2
+        cmp.l    a0,a1
         bgt      memcopy         // if src > dst, copy will do fine.
         beq      end             // if src == dst, nothing to do.
 // now, src < dst.
-        move.l   a0,d0
-        move.l   a1,d1
+        move.l   a1,d0
+        move.l   a0,d1
 #ifdef __mcoldfire__
         eor.l    d1,d0
 #else
@@ -101,14 +116,14 @@ memmove:
 #endif
         btst     #0,d0           // pointers mutually aligned?
         bne      back1
-        move.l   12(sp),d0       // size
+        move.l   d2,d0
         beq      end             // if size == 0, nothing to do
-        add.l    d0,a0
         add.l    d0,a1
-        move.l   a0,d1
+        add.l    d0,a0
+        move.l   a1,d1
         btst     #0,d1
         beq      bcheck64
-        move.b   -(a0),-(a1)
+        move.b   -(a1),-(a0)
         sub.l    #1,d0
         beq      end
 bcheck64:
@@ -125,35 +140,35 @@ bcheck64:
         lsr.l    #8,d0                 // count div 256
         bra      bend256
 bloop256:
-        lea      -256(a0),a0
         lea      -256(a1),a1
-#ifdef __mcoldfire__
-        movem.l  (a0),d2-d7/a2-a6      // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,(a1)
-        movem.l  44(a0),d2-d7/a2-a6    // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,44(a1)
-        movem.l  88(a0),d2-d7/a2-a6    // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,88(a1)
-        movem.l  132(a0),d2-d7/a2-a6   // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,132(a1)
-        movem.l  176(a0),d2-d7/a2-a6   // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,176(a1)
-        movem.l  220(a0),d2-d7/a2-a4   // copy  9x4 bytes
-        movem.l  d2-d7/a2-a4,220(a1)
-#else
-        movem.l  (a0)+,d2-d7/a2-a6     // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,(a1)
-        movem.l  (a0)+,d2-d7/a2-a6     // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,44(a1)
-        movem.l  (a0)+,d2-d7/a2-a6     // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,88(a1)
-        movem.l  (a0)+,d2-d7/a2-a6     // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,132(a1)
-        movem.l  (a0)+,d2-d7/a2-a6     // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,176(a1)
-        movem.l  (a0)+,d2-d7/a2-a4     // copy  9x4 bytes
-        movem.l  d2-d7/a2-a4,220(a1)
         lea      -256(a0),a0
+#ifdef __mcoldfire__
+        movem.l  (a1),d2-d7/a2-a6      // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,(a0)
+        movem.l  44(a1),d2-d7/a2-a6    // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,44(a0)
+        movem.l  88(a1),d2-d7/a2-a6    // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,88(a0)
+        movem.l  132(a1),d2-d7/a2-a6   // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,132(a0)
+        movem.l  176(a1),d2-d7/a2-a6   // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,176(a0)
+        movem.l  220(a1),d2-d7/a2-a4   // copy  9x4 bytes
+        movem.l  d2-d7/a2-a4,220(a0)
+#else
+        movem.l  (a1)+,d2-d7/a2-a6     // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,(a0)
+        movem.l  (a1)+,d2-d7/a2-a6     // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,44(a0)
+        movem.l  (a1)+,d2-d7/a2-a6     // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,88(a0)
+        movem.l  (a1)+,d2-d7/a2-a6     // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,132(a0)
+        movem.l  (a1)+,d2-d7/a2-a6     // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,176(a0)
+        movem.l  (a1)+,d2-d7/a2-a4     // copy  9x4 bytes
+        movem.l  d2-d7/a2-a4,220(a0)
+        lea      -256(a1),a1
 #endif
 bend256:
 #ifdef __mcoldfire__
@@ -173,19 +188,19 @@ bend256:
 #endif
         bra      bend64
 bloop64:
-        lea      -64(a0),a0
         lea      -64(a1),a1
-#ifdef __mcoldfire__
-        movem.l  (a0),d2-d7/a4-a5      // copy 8x4 bytes
-        movem.l  d2-d7/a4-a5,(a1)
-        movem.l  32(a0),d2-d7/a4-a5    // copy 8x4 bytes
-        movem.l  d2-d7/a4-a5,32(a1)
-#else
-        movem.l  (a0)+,d2-d7/a4-a5     // copy 8x4 bytes
-        movem.l  d2-d7/a4-a5,(a1)
-        movem.l  (a0)+,d2-d7/a4-a5     // copy 8x4 bytes
-        movem.l  d2-d7/a4-a5,32(a1)
         lea      -64(a0),a0
+#ifdef __mcoldfire__
+        movem.l  (a1),d2-d7/a4-a5      // copy 8x4 bytes
+        movem.l  d2-d7/a4-a5,(a0)
+        movem.l  32(a1),d2-d7/a4-a5    // copy 8x4 bytes
+        movem.l  d2-d7/a4-a5,32(a0)
+#else
+        movem.l  (a1)+,d2-d7/a4-a5     // copy 8x4 bytes
+        movem.l  d2-d7/a4-a5,(a0)
+        movem.l  (a1)+,d2-d7/a4-a5     // copy 8x4 bytes
+        movem.l  d2-d7/a4-a5,32(a0)
+        lea      -64(a1),a1
 #endif
 bend64:
 #ifdef __mcoldfire__
@@ -209,7 +224,7 @@ back4:
 #endif
         bra      bend4
 bloop4:
-        move.l   -(a0),-(a1)
+        move.l   -(a1),-(a0)
 bend4:
 #ifdef __mcoldfire__
         subq.l   #1,d0
@@ -220,7 +235,7 @@ bend4:
         move.l   d1,d0                  // remainder becomes new count
         bra      bend1
 bloop1:
-        move.b   -(a0),-(a1)
+        move.b   -(a1),-(a0)
 bend1:
 #ifdef __mcoldfire__
         subq.l   #1,d0
@@ -229,16 +244,21 @@ bend1:
         dbra     d0,bloop1              // decrement count, test and loop
 #endif
 end:
-        move.l   4(sp),d0               // return destination pointer
+#ifdef __FASTCALL__
+        move.l   (sp)+,a0
+#else
+        move.l   8(sp),d0               // return destination pointer
+#endif
+        move.l   (sp)+,d2
         rts
 
 // backwards, when pointers are not aligned.
 back1:
-        move.l   12(sp),d0       // size
+        move.l   d2,d0           // size
         beq      end             // if size == 0, nothing to do
 // backwards, but 16 bytes by 16 bytes forward.
-        add.l    d0,a0
         add.l    d0,a1
+        add.l    d0,a0
         move.l   #16,d1
         cmp.l    d1,d0
         blt      bend1
@@ -252,26 +272,26 @@ back16:
         lsr.l    #4,d0
         bra      bend16
 bloop16:
-        lea      -16(a0),a0
         lea      -16(a1),a1
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
         lea      -16(a0),a0
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
         lea      -16(a1),a1
+        lea      -16(a0),a0
 bend16:
 #ifdef __mcoldfire__
         subq.l   #1,d0
@@ -285,8 +305,8 @@ bend16:
         bra      bend1
 
 memcopy:
-        move.l   a0,d0
-        move.l   a1,d1
+        move.l   a1,d0
+        move.l   a0,d1
 #ifdef __mcoldfire__
         eor.l    d1,d0
 #else
@@ -294,11 +314,11 @@ memcopy:
 #endif
         btst     #0,d0                 // pointers mutually aligned?
         bne      copy1                 // +
-        move.l   12(sp),d0             // +
+        move.l   d2,d0
         beq      end                   // if cnt == 0 && pointers both odd ...
         btst     #0,d1                 // pointers aligned, but odd?
         beq      check64               // no
-        move.b   (a0)+,(a1)+           // copy odd byte
+        move.b   (a1)+,(a0)+           // copy odd byte
         sub.l    #1,d0                 // decrement count
 check64:
         move.l   #63,d1                // +
@@ -315,34 +335,34 @@ check64:
         bra      end256
 loop256:
 #ifdef __mcoldfire__
-        movem.l  (a0),d2-d7/a2-a6      // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,(a1)
-        movem.l  44(a0),d2-d7/a2-a6    // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,44(a1)
-        movem.l  88(a0),d2-d7/a2-a6    // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,88(a1)
-        movem.l  132(a0),d2-d7/a2-a6   // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,132(a1)
-        movem.l  176(a0),d2-d7/a2-a6   // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,176(a1)
-        movem.l  220(a0),d2-d7/a2-a4   // copy  9x4 bytes
-        movem.l  d2-d7/a2-a4,220(a1)
-        lea      256(a0),a0
-#else
-        movem.l  (a0)+,d2-d7/a2-a6     // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,(a1)
-        movem.l  (a0)+,d2-d7/a2-a6     // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,44(a1)
-        movem.l  (a0)+,d2-d7/a2-a6     // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,88(a1)
-        movem.l  (a0)+,d2-d7/a2-a6     // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,132(a1)
-        movem.l  (a0)+,d2-d7/a2-a6     // copy 11x4 bytes
-        movem.l  d2-d7/a2-a6,176(a1)
-        movem.l  (a0)+,d2-d7/a2-a4     // copy  9x4 bytes
-        movem.l  d2-d7/a2-a4,220(a1)
-#endif
+        movem.l  (a1),d2-d7/a2-a6      // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,(a0)
+        movem.l  44(a1),d2-d7/a2-a6    // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,44(a0)
+        movem.l  88(a1),d2-d7/a2-a6    // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,88(a0)
+        movem.l  132(a1),d2-d7/a2-a6   // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,132(a0)
+        movem.l  176(a1),d2-d7/a2-a6   // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,176(a0)
+        movem.l  220(a1),d2-d7/a2-a4   // copy  9x4 bytes
+        movem.l  d2-d7/a2-a4,220(a0)
         lea      256(a1),a1
+#else
+        movem.l  (a1)+,d2-d7/a2-a6     // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,(a0)
+        movem.l  (a1)+,d2-d7/a2-a6     // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,44(a0)
+        movem.l  (a1)+,d2-d7/a2-a6     // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,88(a0)
+        movem.l  (a1)+,d2-d7/a2-a6     // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,132(a0)
+        movem.l  (a1)+,d2-d7/a2-a6     // copy 11x4 bytes
+        movem.l  d2-d7/a2-a6,176(a0)
+        movem.l  (a1)+,d2-d7/a2-a4     // copy  9x4 bytes
+        movem.l  d2-d7/a2-a4,220(a0)
+#endif
+        lea      256(a0),a0
 end256:
 #ifdef __mcoldfire__
         subq.l   #1,d0
@@ -371,18 +391,18 @@ done:
 
 loop64:
 #ifdef __mcoldfire__
-        movem.l  (a0),d2-d7/a4-a5      // copy 8x4 bytes
-        movem.l  d2-d7/a4-a5,(a1)
-        movem.l  32(a0),d2-d7/a4-a5    // copy 8x4 bytes
-        movem.l  d2-d7/a4-a5,32(a1)
-        lea      64(a0),a0
-#else
-        movem.l  (a0)+,d2-d7/a4-a5     // copy 8x4 bytes
-        movem.l  d2-d7/a4-a5,(a1)
-        movem.l  (a0)+,d2-d7/a4-a5     // copy 8x4 bytes
-        movem.l  d2-d7/a4-a5,32(a1)
-#endif
+        movem.l  (a1),d2-d7/a4-a5      // copy 8x4 bytes
+        movem.l  d2-d7/a4-a5,(a0)
+        movem.l  32(a1),d2-d7/a4-a5    // copy 8x4 bytes
+        movem.l  d2-d7/a4-a5,32(a0)
         lea      64(a1),a1
+#else
+        movem.l  (a1)+,d2-d7/a4-a5     // copy 8x4 bytes
+        movem.l  d2-d7/a4-a5,(a0)
+        movem.l  (a1)+,d2-d7/a4-a5     // copy 8x4 bytes
+        movem.l  d2-d7/a4-a5,32(a0)
+#endif
+        lea      64(a0),a0
 end64:
 #ifdef __mcoldfire__
         subq.l   #1,d0
@@ -405,7 +425,7 @@ copy4:
 #endif
         bra      end4
 loop4:
-        move.l   (a0)+,(a1)+
+        move.l   (a1)+,(a0)+
 end4:
 #ifdef __mcoldfire__
         subq.l   #1,d0
@@ -416,7 +436,7 @@ end4:
         move.l   d1,d0                 // remainder becomes new count
         bra      end1
 loop1:
-        move.b   (a0)+,(a1)+
+        move.b   (a1)+,(a0)+
 end1:
 #ifdef __mcoldfire__
         subq.l   #1,d0
@@ -424,11 +444,16 @@ end1:
 #else
         dbra     d0,loop1              // decrement count, test and loop
 #endif
-        move.l   4(sp),d0              // return destination pointer
+#ifdef __FASTCALL__
+        move.l   (sp)+,a0
+#else
+        move.l   8(sp),d0              // return destination pointer
+#endif
+        move.l   (sp)+,d2
         rts
 
 copy1:
-        move.l   12(sp),d0
+        move.l   d2,d0
                                        // count can be big; test on it !
         move.l   #16,d1                // == moveq; 4
         cmp.l    d1,d0                 // 6
@@ -443,22 +468,22 @@ copy16:
         lsr.l    #4,d0
         bra      end16
 loop16:
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
-        move.b   (a0)+,(a1)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
+        move.b   (a1)+,(a0)+
 end16:
 #ifdef __mcoldfire__
         subq.l   #1,d0

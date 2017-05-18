@@ -46,12 +46,12 @@
 #define PE_RELOCATE   50    /* required for NatFeats support only, not in Atari TOS */
 
 /* OS entry points implemented in util/miscasm.S */
-extern long trap1(int, ...);
-extern long trap1_pexec(short mode, const char * path,
+extern long __CDECL trap1(int, ...);
+extern long __CDECL trap1_pexec(short mode, const char * path,
   const void * tail, const char * env);
 
 /* Wrapper around the STOP instruction. This preserves SR. */
-extern void stop_until_interrupt(void);
+extern void __CDECL stop_until_interrupt(void);
 
 /*
  * Push/Pop registers from stack, with ColdFire support.

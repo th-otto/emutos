@@ -31,7 +31,7 @@
 
 
 
-void tchange(LONG c)            /* c=number of ticks that have gone by  */
+void __CDECL tchange(LONG c)            /* c=number of ticks that have gone by  */
 {
     EVB *d;
     LONG c1;

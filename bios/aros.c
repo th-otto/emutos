@@ -26,7 +26,7 @@
 #include "kprint.h"
 
 /* The following functions are defined in aros2.S */
-ULONG MemoryTest(void *address, void *endAddress, ULONG blockSize);
+ULONG __CDECL MemoryTest(void *address, void *endAddress, ULONG blockSize);
 
 /******************************************************************************/
 /* Compatibility macros and types                                             */

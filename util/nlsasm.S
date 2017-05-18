@@ -33,30 +33,39 @@ _gettext_init:
 
 #if USE_RAM_HASH
 // clear the RAM hash
+#ifdef __FASTCALL__
+        move.l  #(1024+10)*8,d1
+        moveq   #0,d0
+        lea     ram_hash,a0
+        jsr     _memset
+#else
         move.l  #(1024+10)*8,-(sp)
         clr.w   -(sp)
         pea     ram_hash
         jsr     _memset
         lea     10(sp),sp
+#endif
 #endif  /* USE_RAM_HASH */
         rts
 
 _gettext:
-        tst.l   _nls_hash
-        bne     empty
-        move.l  4(sp),d0
-        rts
-empty:
-/* check for empty string - often used in RSC - must return original address */
+#ifndef __FASTCALL__
         move.l  4(sp),a0
+#endif
+        tst.l   _nls_hash
+        beq     empty
+/* check for empty string - often used in RSC - must return original address */
         tst.b   (a0)
         bne     next
+empty:
         move.l  a0,d0
         rts
 next:
+        move.l  a0,a1
+        move.l  d2,-(a7)
+        move.l  a0,d2
 #if USE_RAM_HASH
-        move.l  4(sp),d0
-        move.l  d0,a1
+        move.l  a0,d0
         lsl.l   #3,d0
         move.l  d0,d1
         lsl.l   #6,d1
@@ -88,11 +97,14 @@ rh_try:
         bra     rh_not_found
 rh_found:
         move.l  (a0)+,d0
+#ifdef __FASTCALL__
+        move.l  d0,a0
+#endif
         rts
 rh_not_found:
 #endif  /* USE_RAM_HASH */
 
-        move.l  4(sp),a0
+        move.l  a1,a0
         moveq   #0,d0
 #ifdef __mcoldfire__
         move.l  d0,d1
@@ -142,10 +154,11 @@ hash_next:
         bne     search
 // not in hash, return original string
 not_found:
-        move.l  4(sp),d0
+        move.l  d2,a0
 #if USE_RAM_HASH
         jmp     store_ram_hash
 #else
+        move.l  (a7)+,d2
         rts
 #endif
 
@@ -159,7 +172,7 @@ search:
 #else
         exg     a0,d1
 #endif
-        move.l  4(sp),a1
+        move.l  d2,a1
 strcmp:
         move.b  (a0)+,d0
         beq     strend
@@ -209,11 +222,15 @@ srh_try:
 // no room in ram hash
         bra     srh_end
 srh_free_slot:
-        move.l  4(sp),(a0)+
+        move.l  d2,(a0)+
         move.l  a1,(a0)
 srh_end:
         move.l  a1,d0
+#ifdef __FASTCALL__
+        move.l  d0,a0
+#endif
 #endif /* USE_RAM_HASH */
+        move.l  (a7)+,d2
         rts
 
 

@@ -610,7 +610,7 @@ static const struct _protobt protobt_data[] = {
 };
 #define NUM_PROTOBT_ENTRIES ARRAY_SIZE(protobt_data)
 
-void protobt(UBYTE *buf, LONG serial, WORD type, WORD exec)
+void __CDECL protobt(UBYTE *buf, LONG serial, WORD type, WORD exec)
 {
     WORD is_exec;
     struct bs *b = (struct bs *)buf;
@@ -677,14 +677,14 @@ static void setiword(UBYTE *addr, UWORD value)
 /*==== xbios floprd, flopwr ===============================================*/
 
 
-LONG floprd(UBYTE *buf, LONG filler, WORD dev,
+LONG __CDECL floprd(UBYTE *buf, LONG filler, WORD dev,
             WORD sect, WORD track, WORD side, WORD count)
 {
     return floprw(buf, RW_READ, dev, sect, track, side, count);
 }
 
 
-LONG flopwr(const UBYTE *buf, LONG filler, WORD dev,
+LONG __CDECL flopwr(const UBYTE *buf, LONG filler, WORD dev,
             WORD sect, WORD track, WORD side, WORD count)
 {
     return floprw(CONST_CAST(UBYTE *, buf), RW_WRITE, dev, sect, track, side, count);
@@ -729,7 +729,7 @@ LONG flopwr(const UBYTE *buf, LONG filler, WORD dev,
  * otherwise it's the return code from the last unexpected error.
  */
 
-LONG flopver(WORD *buf, LONG filler, WORD dev,
+LONG __CDECL flopver(WORD *buf, LONG filler, WORD dev,
              WORD sect, WORD track, WORD side, WORD count)
 {
     WORD i, err;
@@ -757,7 +757,7 @@ LONG flopver(WORD *buf, LONG filler, WORD dev,
 
 /*==== xbios flopfmt ======================================================*/
 
-LONG flopfmt(UBYTE *buf, WORD *skew, WORD dev, WORD spt,
+LONG __CDECL flopfmt(UBYTE *buf, WORD *skew, WORD dev, WORD spt,
              WORD track, WORD side, WORD interleave,
              ULONG magic, WORD virgin)
 {
@@ -890,7 +890,7 @@ LONG flopfmt(UBYTE *buf, WORD *skew, WORD dev, WORD spt,
  * 3   3ms
  */
 
-LONG floprate(WORD dev, WORD rate)
+LONG __CDECL floprate(WORD dev, WORD rate)
 {
     WORD old;
 
@@ -1194,7 +1194,7 @@ static void flopunlk(void)
  *  . detects a change of diskette
  *  . turns off the drive motor when it times out
  */
-void flopvbl(void)
+void __CDECL flopvbl(void)
 {
     WORD n, status;
     UBYTE a, old_a, wp;

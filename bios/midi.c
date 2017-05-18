@@ -23,7 +23,7 @@
 
 /*==== MIDI bios functions =========================================*/
 
-LONG bconstat3(void)
+LONG __CDECL bconstat3(void)
 {
     if (midiiorec.head == midiiorec.tail)
     {
@@ -35,7 +35,7 @@ LONG bconstat3(void)
     }
 }
 
-LONG bconin3(void)
+LONG __CDECL bconin3(void)
 {
     while(!bconstat3())
         ;
@@ -66,7 +66,7 @@ LONG bconin3(void)
 
 
 /* can we send a byte to the MIDI ACIA ? */
-LONG bcostat3(void)
+LONG __CDECL bcostat3(void)
 {
 #if CONF_WITH_MIDI_ACIA
     if (midi_acia.ctrl & ACIA_TDRE)
@@ -84,7 +84,7 @@ LONG bcostat3(void)
 }
 
 /* send a byte to the MIDI ACIA */
-LONG bconout3(WORD dev, WORD c)
+LONG __CDECL bconout3(WORD dev, WORD c)
 {
     while(!bcostat3())
         ;
@@ -104,7 +104,7 @@ LONG bconout3(WORD dev, WORD c)
  * Note: this effectively treats the cnt argument as unsigned, just like
  * Atari TOS does.
  */
-void midiws(WORD cnt, const UBYTE *ptr)
+void __CDECL midiws(WORD cnt, const UBYTE *ptr)
 {
     do
     {

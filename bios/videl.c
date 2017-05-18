@@ -508,7 +508,7 @@ WORD current_video_mode;
 /*
  * Set Falcon video mode
  */
-WORD vsetmode(WORD mode)
+WORD __CDECL vsetmode(WORD mode)
 {
     WORD ret;
 
@@ -532,7 +532,7 @@ WORD vsetmode(WORD mode)
 /*
  * Get Videl monitor type
  */
-WORD vmontype(void)
+WORD __CDECL vmontype(void)
 {
     if (!has_videl)
         return 0x59;    /* unimplemented xbios call: return function # */
@@ -543,7 +543,7 @@ WORD vmontype(void)
 /*
  * Set external video sync mode
  */
-WORD vsetsync(WORD external)
+WORD __CDECL vsetsync(WORD external)
 {
     UWORD spshift;
 
@@ -572,7 +572,7 @@ WORD vsetsync(WORD external)
 /*
  * get video ram size according to mode
  */
-LONG vgetsize(WORD mode)
+LONG __CDECL vgetsize(WORD mode)
 {
     const VMODE_ENTRY *p;
     int height;
@@ -659,7 +659,7 @@ static int use_ste_palette(WORD videomode)
  * address | 0x01      load first 16 Falcon palette regs from address
  *       0 | 0x01      load 256 Falcon palette regs from falcon_shadow_palette[]
  */
-WORD vsetrgb(WORD index,WORD count,const ULONG *rgb)
+WORD __CDECL vsetrgb(WORD index,WORD count,const ULONG *rgb)
 {
     ULONG *shadow;
     const ULONG *source;
@@ -713,7 +713,7 @@ WORD vsetrgb(WORD index,WORD count,const ULONG *rgb)
 /*
  * get palette registers
  */
-WORD vgetrgb(WORD index,WORD count,ULONG *rgb)
+WORD __CDECL vgetrgb(WORD index,WORD count,ULONG *rgb)
 {
     ULONG *shadow;
     union {

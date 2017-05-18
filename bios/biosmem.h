@@ -30,6 +30,6 @@ UBYTE *balloc_stram(ULONG size, BOOL top);
 
 /* BIOS function */
 
-void getmpb(MPB *mpb);
+void __CDECL getmpb(MPB *mpb);
 
 #endif /* BIOSMEM_H */

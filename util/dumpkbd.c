@@ -266,7 +266,7 @@ void dump_tables(struct ktbl *ktbl, char *fname, char *name)
 }
 
 
-int main(int argc, char **argv)
+int main(void)
 {
     struct ktbl ktbl;
     char name[3];

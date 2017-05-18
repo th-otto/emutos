@@ -91,10 +91,10 @@ typedef unsigned short  UWORD;                  /*  unsigned 16 bit word*/
 typedef long            LONG;                   /*  signed 32 bit word  */
 
 /* pointer to function returning LONG */
-typedef LONG (*PFLONG)(void);
+typedef LONG (__CDECL *PFLONG)(void);
 
 /* pointer to function returning VOID */
-typedef void (*PFVOID)(void);
+typedef void (__CDECL *PFVOID)(void);
 
 /*
  *  Macros

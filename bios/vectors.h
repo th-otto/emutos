@@ -17,39 +17,39 @@
 
 /* initialize default exception vectors */
 
-extern void init_exc_vec(void);
-extern void init_user_vec(void);
+extern void __CDECL init_exc_vec(void);
+extern void __CDECL init_user_vec(void);
 
 /* initialise acia vectors */
 
-extern void init_acia_vecs(void);
+extern void __CDECL init_acia_vecs(void);
 
 /* some exception vectors */
 
 #if CONF_WITH_ATARI_VIDEO
-extern void int_hbl(void);
+extern void __CDECL int_hbl(void);
 #endif
-extern void int_vbl(void);
-extern void int_linea(void);
-extern void int_timerc(void);
+extern void __CDECL int_vbl(void);
+extern void __CDECL int_linea(void);
+extern void __CDECL int_timerc(void);
 
-extern void gemtrap(void);
-extern void biostrap(void);
-extern void xbiostrap(void);
+extern void __CDECL gemtrap(void);
+extern void __CDECL biostrap(void);
+extern void __CDECL xbiostrap(void);
 
-extern void just_rte(void);
-extern void just_rts(void);
+extern void __CDECL just_rte(void);
+extern void __CDECL just_rts(void);
 
 #if CONF_WITH_BUS_ERROR
-long check_read_byte(long);
+long __CDECL check_read_byte(long);
 #endif
 
 
 /* */
-extern LONG default_etv_critic(WORD err,WORD dev);
-extern void int_illegal(void);
-extern void int_priv(void);
-extern void int_unimpint(void);
+extern LONG __CDECL default_etv_critic(WORD err,WORD dev);
+extern void __CDECL int_illegal(void);
+extern void __CDECL int_priv(void);
+extern void __CDECL int_unimpint(void);
 
 extern WORD trap_save_area[];
 
@@ -86,14 +86,14 @@ extern WORD trap_save_area[];
 
 /* Non-Atari hardware vectors */
 #if !CONF_WITH_MFP
-extern void (*vector_5ms)(void);              /* 200 Hz system timer */
+extern void (__CDECL *vector_5ms)(void);              /* 200 Hz system timer */
 #endif
 
 /* protect d2/a2 when calling external user-supplied code */
 
-LONG protect_v(LONG (*func)(void));
-LONG protect_w(LONG (*func)(WORD), WORD);
-LONG protect_ww(LONG (*func)(void), WORD, WORD);
-LONG protect_wlwwwl(LONG (*func)(void), WORD, LONG, WORD, WORD, WORD, LONG);
+LONG __CDECL protect_v(LONG (__CDECL *func)(void));
+LONG __CDECL protect_w(LONG (__CDECL *func)(WORD), WORD);
+LONG __CDECL protect_ww(LONG (__CDECL *func)(void), WORD, WORD);
+LONG __CDECL protect_wlwwwl(LONG (__CDECL *func)(void), WORD, LONG, WORD, WORD, WORD, LONG);
 
 #endif /* VECTORS_H */

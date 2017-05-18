@@ -225,7 +225,7 @@ void dmasound_init(void)
 /**
  * Lock the XBIOS DMA sound subsystem
  */
-LONG locksnd(void)
+LONG __CDECL locksnd(void)
 {
     if (!SOUND_IS_AVAILABLE)
         return 0x80;    /* unimplemented xbios call: return function # */
@@ -240,7 +240,7 @@ LONG locksnd(void)
 /**
  * Free the XBIOS DMA sound subsystem
  */
-LONG unlocksnd(void)
+LONG __CDECL unlocksnd(void)
 {
     if (!SOUND_IS_AVAILABLE)
         return 0x81;    /* unimplemented xbios call: return function # */
@@ -352,7 +352,7 @@ static LONG sndcmd_ste(WORD mode, WORD data)
 /**
  * Configure various sound settings
  */
-LONG soundcmd(WORD mode, WORD data)
+LONG __CDECL soundcmd(WORD mode, WORD data)
 {
     if (!SOUND_IS_AVAILABLE)
         return 0x82;    /* unimplemented xbios call: return function # */
@@ -379,7 +379,7 @@ LONG soundcmd(WORD mode, WORD data)
 /**
  * Set DMA sound frame buffer pointers
  */
-LONG setbuffer(UWORD mode, ULONG startaddr, ULONG endaddr)
+LONG __CDECL setbuffer(UWORD mode, ULONG startaddr, ULONG endaddr)
 {
     if (!SOUND_IS_AVAILABLE)
         return 0x83;    /* unimplemented xbios call: return function # */
@@ -411,7 +411,7 @@ LONG setbuffer(UWORD mode, ULONG startaddr, ULONG endaddr)
 /**
  * Set sound mode (stereo/mono, 8-bit/16-bit)
  */
-LONG setsndmode(UWORD mode)
+LONG __CDECL setsndmode(UWORD mode)
 {
     UBYTE modectrl;
 
@@ -434,7 +434,7 @@ LONG setsndmode(UWORD mode)
 /**
  * Set amount of tracks
  */
-LONG settracks(UWORD playtracks, UWORD rectracks)
+LONG __CDECL settracks(UWORD playtracks, UWORD rectracks)
 {
     if (!SOUND_IS_AVAILABLE)
         return 0x85;    /* unimplemented xbios call: return function # */
@@ -451,7 +451,7 @@ LONG settracks(UWORD playtracks, UWORD rectracks)
 /**
  * Set DAC track
  */
-LONG setmontracks(UWORD montrack)
+LONG __CDECL setmontracks(UWORD montrack)
 {
     if (!SOUND_IS_AVAILABLE)
         return 0x86;    /* unimplemented xbios call: return function # */
@@ -467,7 +467,7 @@ LONG setmontracks(UWORD montrack)
 /**
  * Set interrupt mode (Timer-A or MFP-i7)
  */
-LONG setinterrupt(UWORD mode, WORD cause)
+LONG __CDECL setinterrupt(UWORD mode, WORD cause)
 {
     UBYTE irqreg;
 
@@ -509,7 +509,7 @@ LONG setinterrupt(UWORD mode, WORD cause)
 /**
  * Enable/disable frame replay/recording and set looping mode
  */
-LONG buffoper(WORD mode)
+LONG __CDECL buffoper(WORD mode)
 {
     if (!SOUND_IS_AVAILABLE)
         return 0x88;    /* unimplemented xbios call: return function # */
@@ -531,7 +531,7 @@ LONG buffoper(WORD mode)
 /**
  * Connect/disconnect the DSP from the sound matrix
  */
-LONG dsptristate(WORD dspxmit, WORD dsprec)
+LONG __CDECL dsptristate(WORD dspxmit, WORD dsprec)
 {
     if (!SOUND_IS_AVAILABLE)
         return 0x89;    /* unimplemented xbios call: return function # */
@@ -555,7 +555,7 @@ LONG dsptristate(WORD dspxmit, WORD dsprec)
 /**
  * Set/get the GPIO pins of the DSP connector
  */
-LONG gpio(UWORD mode, UWORD data)
+LONG __CDECL gpio(UWORD mode, UWORD data)
 {
     if (!SOUND_IS_AVAILABLE)
         return 0x8a;    /* unimplemented xbios call: return function # */
@@ -663,7 +663,7 @@ static LONG devconnect_ste(WORD source, WORD dest, WORD clk,
     return 0;
 }
 
-LONG devconnect(WORD source, WORD dest, WORD clk, WORD prescale, WORD protocol)
+LONG __CDECL devconnect(WORD source, WORD dest, WORD clk, WORD prescale, WORD protocol)
 {
     if (!SOUND_IS_AVAILABLE)
         return 0x8b;    /* unimplemented xbios call: return function # */
@@ -675,7 +675,7 @@ LONG devconnect(WORD source, WORD dest, WORD clk, WORD prescale, WORD protocol)
 }
 
 
-LONG sndstatus(WORD reset)
+LONG __CDECL sndstatus(WORD reset)
 {
     if (!SOUND_IS_AVAILABLE)
         return 0x8c;    /* unimplemented xbios call: return function # */
@@ -696,7 +696,7 @@ LONG sndstatus(WORD reset)
 /**
  * Get current frame replay/recording positions
  */
-LONG buffptr(LONG ptr)
+LONG __CDECL buffptr(LONG ptr)
 {
     struct SndBufPtr {
         LONG play;

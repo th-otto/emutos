@@ -23,7 +23,7 @@ static long nfid_stderr;
 static long nfid_xhdi;
 static long nfid_shutdown;
 
-int detect_native_features(void);    /* defined in natfeat.S */
+int __CDECL detect_native_features(void);    /* defined in natfeat.S */
 
 void natfeat_init(void)
 {

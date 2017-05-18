@@ -27,7 +27,7 @@
  *  K&R prototype to avoid prototype mismatch warnings
  *  with different arguments.
  */
-extern LONG gemdos();
+extern LONG __CDECL gemdos(short, ...);
 
 
 #define X_TABOUT 0x02

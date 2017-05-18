@@ -23,20 +23,20 @@ void detect_dmasound(void);
 void dmasound_init(void);
 
 /* XBIOS DMA sound functions */
-LONG locksnd(void);
-LONG unlocksnd(void);
-LONG soundcmd(WORD mode, WORD data);
-LONG setbuffer(UWORD mode, ULONG startaddr, ULONG endaddr);
-LONG setsndmode(UWORD mode);
-LONG settracks(UWORD playtracks, UWORD rectracks);
-LONG setmontracks(UWORD montrack);
-LONG setinterrupt(UWORD mode, WORD cause);
-LONG buffoper(WORD mode);
-LONG dsptristate(WORD dspxmit, WORD dsprec);
-LONG gpio(UWORD mode, UWORD data);
-LONG devconnect(WORD source, WORD dest, WORD clk, WORD prescale, WORD protocol);
-LONG sndstatus(WORD reset);
-LONG buffptr(LONG sptr);
+LONG __CDECL locksnd(void);
+LONG __CDECL unlocksnd(void);
+LONG __CDECL soundcmd(WORD mode, WORD data);
+LONG __CDECL setbuffer(UWORD mode, ULONG startaddr, ULONG endaddr);
+LONG __CDECL setsndmode(UWORD mode);
+LONG __CDECL settracks(UWORD playtracks, UWORD rectracks);
+LONG __CDECL setmontracks(UWORD montrack);
+LONG __CDECL setinterrupt(UWORD mode, WORD cause);
+LONG __CDECL buffoper(WORD mode);
+LONG __CDECL dsptristate(WORD dspxmit, WORD dsprec);
+LONG __CDECL gpio(UWORD mode, UWORD data);
+LONG __CDECL devconnect(WORD source, WORD dest, WORD clk, WORD prescale, WORD protocol);
+LONG __CDECL sndstatus(WORD reset);
+LONG __CDECL buffptr(LONG sptr);
 
 #endif /* CONF_WITH_DMASOUND */
 

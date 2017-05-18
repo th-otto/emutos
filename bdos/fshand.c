@@ -27,7 +27,7 @@
  * Error returns:
  *     EIHNDL
  */
-long xforce(int std, int h)
+long __CDECL xforce(int std, int h)
 {
     return ixforce(std,h,run);
 }
@@ -88,7 +88,7 @@ long ixforce(int std, int h, PD *p)
  *     ENHNDL
  *
  */
-long xdup(int h)
+long __CDECL xdup(int h)
 {
     int i;
 

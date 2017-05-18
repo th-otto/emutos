@@ -23,10 +23,10 @@
  * in proc.c
  */
 
-long xexec(WORD, char *, char *, char *);
-void x0term(void);
-void xterm(UWORD rc)  NORETURN ;
-WORD xtermres(long blkln, WORD rc);
+long __CDECL xexec(WORD, char *, char *, char *);
+void __CDECL x0term(void);
+void __CDECL xterm(UWORD rc)  NORETURN ;
+WORD __CDECL xtermres(long blkln, WORD rc);
 
 /*
  * in kpgmld.c
@@ -43,7 +43,7 @@ LONG kpgm_relocate( PD *p, long length); /* SOP */
  * in rwa.S
  */
 
-void gouser(void)  NORETURN;
-void termuser(void)  NORETURN;
+void __CDECL gouser(void)  NORETURN;
+void __CDECL termuser(void)  NORETURN;
 
 #endif /* PROC_H */

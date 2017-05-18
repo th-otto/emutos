@@ -39,7 +39,7 @@ extern WORD boot_status;
 extern int cprintf(const char *fmt, ...) PRINTF_STYLE;
 
 /* native debugging output */
-extern int kprintf(const char *fmt, ...) PRINTF_STYLE;
+extern int __CDECL kprintf(const char *fmt, ...) PRINTF_STYLE;
 
 /* output done both through kprintf and cprintf */
 extern int kcprintf(const char *fmt, ...) PRINTF_STYLE;
@@ -69,21 +69,21 @@ extern void doassert(const char *, long, const char *, const char *);
 /* functions below implemented in panicasm.S */
 
 /* print a panic message both via kprintf and cprintf, then halt */
-extern void panic(const char *fmt, ...) PRINTF_STYLE NORETURN;
+extern void __CDECL panic(const char *fmt, ...) PRINTF_STYLE NORETURN;
 
 /* halt the machine */
-extern void halt(void) NORETURN;
+extern void __CDECL halt(void) NORETURN;
 
 /* kill current program */
-void kill_program(void) NORETURN;
+void __CDECL kill_program(void) NORETURN;
 
 /* Restart this OS */
-void warm_reset(void) NORETURN;
+void __CDECL warm_reset(void) NORETURN;
 
 /* Invalidate the RAM configuration and reset the computer to the ROM OS */
-void cold_reset(void) NORETURN;
+void __CDECL cold_reset(void) NORETURN;
 
 /* display information found in 0x380 and halt */
-extern void dopanic(const char *fmt, ...) PRINTF_STYLE NORETURN;
+extern void __CDECL dopanic(const char *fmt, ...) PRINTF_STYLE NORETURN;
 
 #endif /* KPRINT_H */

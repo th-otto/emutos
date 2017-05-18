@@ -645,10 +645,15 @@ any_boot:
 // Clear memory from a0 to a1
 call_bzero_a0_a1:
         sub.l   a0,a1
+#ifdef __FASTCALL__
+        move.l  a1,d0       // size
+        jsr     _bzero
+#else
         move.l  a1,-(sp)    // size
         move.l  a0,-(sp)    // start
         jsr     _bzero
         addq.l  #8,sp
+#endif
         rts
 
 #if CONF_WITH_ADVANCED_CPU

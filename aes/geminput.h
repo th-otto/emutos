@@ -34,11 +34,11 @@ UWORD dq(CQUEUE *qptr);
 void fq(void);
 void evremove(EVB *e, UWORD ret);
 
-void kchange(LONG fdata);
+void __CDECL kchange(LONG fdata);
 void post_keybd(CDA *c, UWORD ch);
-void bchange(LONG fdata);
+void __CDECL bchange(LONG fdata);
 WORD downorup(WORD new, LONG buparm);
-void mchange(LONG fdata);
+void __CDECL mchange(LONG fdata);
 
 void akbin(EVB *e);
 void adelay(EVB *e, LONG c);

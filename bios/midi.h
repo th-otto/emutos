@@ -19,12 +19,12 @@
 extern void midi_init(void);
 
 /* some bios functions */
-extern LONG bconstat3(void);
-extern LONG bconin3(void);
-extern LONG bcostat3(void);
-extern LONG bconout3(WORD dev, WORD c);
+extern LONG __CDECL bconstat3(void);
+extern LONG __CDECL bconin3(void);
+extern LONG __CDECL bcostat3(void);
+extern LONG __CDECL bconout3(WORD dev, WORD c);
 
 /* some xbios functions */
-extern void midiws(WORD cnt, const UBYTE *ptr);
+extern void __CDECL midiws(WORD cnt, const UBYTE *ptr);
 
 #endif /* MIDI_H */

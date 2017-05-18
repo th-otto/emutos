@@ -21,8 +21,10 @@
  */
 
 _strlencpy:
-        movea.l 8(sp),a0
-        movea.l 4(sp),a1
+#ifndef __FASTCALL__
+        movea.l 8(sp),a1
+        movea.l 4(sp),a0
+#endif
         moveq   #0,d0
 lstcpy_loop:
 #ifdef __mcoldfire__
@@ -30,7 +32,7 @@ lstcpy_loop:
 #else
         addq.w  #1,d0
 #endif
-        move.b  (a0)+,(a1)+
+        move.b  (a1)+,(a0)+
         bne.s   lstcpy_loop
 #ifdef __mcoldfire__
         subq.l  #1,d0
@@ -46,10 +48,12 @@ lstcpy_loop:
  */
 
 _strchr:
+#ifndef __FASTCALL__
         move.l  4(sp),a0
-        move.w  8(sp),d1
+        move.w  8(sp),d0
+#endif
 strchr_loop:
-        move.b  (a0)+,d0
+        move.b  (a0)+,d1
         beq.s   strchr_null
         cmp.b   d1,d0
         bne.s   strchr_loop
@@ -57,5 +61,9 @@ strchr_loop:
         move.l  a0,d0
         rts
 strchr_null:
+#ifdef __FASTCALL__
+        suba.l  a0,a0
+#else
         moveq.l #0,d0
+#endif
         rts

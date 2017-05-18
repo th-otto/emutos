@@ -40,8 +40,8 @@
 
 /* internal routines */
 
-static void do_bell(void);
-static void do_keyclick(void);
+static void __CDECL do_bell(void);
+static void __CDECL do_keyclick(void);
 
 #if CONF_WITH_YM2149
 
@@ -92,7 +92,7 @@ void snd_init(void)
     kcl_hook = do_keyclick;
 }
 
-LONG giaccess(WORD data, WORD reg)
+LONG __CDECL giaccess(WORD data, WORD reg)
 {
 #if CONF_WITH_YM2149
     WORD old_sr;
@@ -113,7 +113,7 @@ LONG giaccess(WORD data, WORD reg)
 #endif
 }
 
-void ongibit(WORD data)
+void __CDECL ongibit(WORD data)
 {
 #if CONF_WITH_YM2149
     WORD old_sr;
@@ -128,7 +128,7 @@ void ongibit(WORD data)
 #endif
 }
 
-void offgibit(WORD data)
+void __CDECL offgibit(WORD data)
 {
 #if CONF_WITH_YM2149
     WORD old_sr;
@@ -143,7 +143,7 @@ void offgibit(WORD data)
 #endif
 }
 
-LONG dosound(LONG table)
+LONG __CDECL dosound(LONG table)
 {
 #if CONF_WITH_YM2149
     LONG oldtable = (LONG) sndtable;
@@ -161,7 +161,7 @@ LONG dosound(LONG table)
 }
 
 #if CONF_WITH_YM2149
-void sndirq(void)
+void __CDECL sndirq(void)
 {
     BYTE *code;
     BYTE instr;
@@ -255,14 +255,14 @@ void bell(void)
     protect_v((PFLONG) bell_hook);
 }
 
-static void do_bell(void)
+static void __CDECL do_bell(void)
 {
 #if CONF_WITH_YM2149
     dosound((LONG) bellsnd);
 #endif
 }
 
-static void do_keyclick(void)
+static void __CDECL do_keyclick(void)
 {
 #if CONF_WITH_YM2149
     dosound((LONG) keyclicksnd);

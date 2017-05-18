@@ -93,7 +93,7 @@ UBYTE mouse_packet[3];                  /* passed to mousevec() */
 
 static struct keytbl current_keytbl;
 
-LONG keytbl(const UBYTE* norm, const UBYTE* shft, const UBYTE* caps)
+LONG __CDECL keytbl(const UBYTE* norm, const UBYTE* shft, const UBYTE* caps)
 {
     if (norm != (UBYTE*)-1) {
         current_keytbl.norm = norm;
@@ -107,7 +107,7 @@ LONG keytbl(const UBYTE* norm, const UBYTE* shft, const UBYTE* caps)
     return (LONG) & current_keytbl;
 }
 
-void bioskeys(void)
+void __CDECL bioskeys(void)
 {
     /* ask country.c for the default key table of the current country */
     current_keytbl = *get_keytbl();
@@ -116,7 +116,7 @@ void bioskeys(void)
 
 /*=== kbshift (bios) =====================================================*/
 
-LONG kbshift(WORD flag)
+LONG __CDECL kbshift(WORD flag)
 {
     WORD oldy;
 
@@ -131,7 +131,7 @@ LONG kbshift(WORD flag)
 
 /*=== iorec handling (bios) ==============================================*/
 
-LONG bconstat2(void)
+LONG __CDECL bconstat2(void)
 {
     if (ikbdiorec.head == ikbdiorec.tail) {
         return 0;               /* iorec empty */
@@ -140,7 +140,7 @@ LONG bconstat2(void)
     }
 }
 
-LONG bconin2(void)
+LONG __CDECL bconin2(void)
 {
     WORD old_sr;
     ULONG value;
@@ -379,7 +379,7 @@ static UBYTE kb_last_scancode;
 static ULONG kb_last_key;
 static PFVOID kb_last_ikbdsys; /* ikbdsys when kb_last_key was set */
 
-WORD kbrate(WORD initial, WORD repeat)
+WORD __CDECL kbrate(WORD initial, WORD repeat)
 {
     WORD ret = MAKE_UWORD(kb_initial, kb_repeat);
 
@@ -465,7 +465,7 @@ static void do_key_repeat(void)
 /* Keyboard timer interrupt handler.
  * It is called at 50 Hz (each 4th Timer C call).
  */
-void kb_timerc_int(void)
+void __CDECL kb_timerc_int(void)
 {
     do_key_repeat();
 }
@@ -605,7 +605,7 @@ static ULONG combine_scancode_ascii(UBYTE scancode,WORD ascii)
  * kbd_int : called by the interrupt routine for key events.
  */
 
-void kbd_int(UBYTE scancode)
+void __CDECL kbd_int(UBYTE scancode)
 {
     ULONG value;                /* the value to push into iorec */
     WORD ascii = 0;
@@ -754,7 +754,7 @@ void kbd_int(UBYTE scancode)
 /*=== ikbd acia stuff ==================================================*/
 
 /* can we send a byte to the ikbd ? */
-LONG bcostat4(void)
+LONG __CDECL bcostat4(void)
 {
 #if CONF_WITH_IKBD_ACIA
     if (ikbd_acia.ctrl & ACIA_TDRE) {
@@ -771,7 +771,7 @@ LONG bcostat4(void)
 }
 
 /* send a byte to the IKBD */
-LONG bconout4(WORD dev, WORD c)
+LONG __CDECL bconout4(WORD dev, WORD c)
 {
     ikbd_writeb((UBYTE)c);
     return 1L;
@@ -786,7 +786,7 @@ LONG bconout4(WORD dev, WORD c)
  * ridiculously small stack (sp == 0x22), so keep stack usage as small as
  * possible here.
  */
-void ikbdws(WORD cnt, const UBYTE *ptr)
+void __CDECL ikbdws(WORD cnt, const UBYTE *ptr)
 {
     do
     {

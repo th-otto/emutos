@@ -195,7 +195,7 @@ static int namlen(char *s11)                            /* M01.01.1107.01 */
  *
  *  Function 0x39   d_create
  */
-long xmkdir(char *s)
+long __CDECL xmkdir(char *s)
 {
     OFD *f;
     FCB *f2;
@@ -289,7 +289,7 @@ long xmkdir(char *s)
  *                  EACCDN
  *                  EINTRN
  */
-long xrmdir(char *p)
+long __CDECL xrmdir(char *p)
 {
     DND *d;
     DND *d1,**q;
@@ -384,7 +384,7 @@ long xrmdir(char *p)
  *                  EPTHNF
  *                  EFILNF
  */
-long xchmod(char *p, int wrt, char mod)
+long __CDECL xchmod(char *p, int wrt, char mod)
 {
     OFD *fd;
     DND *dn;                                /*  M01.01.03   */
@@ -507,7 +507,7 @@ static BOOL contains_wildcard_characters(const char *test)
  *
  *  Error returns:  EFILNF
  */
-long xsfirst(char *name, int att)
+long __CDECL xsfirst(char *name, int att)
 {
     long result;
     DTAINFO *dt;                            /* M01.01.1209.01 */
@@ -638,7 +638,7 @@ static FCB *ixsnext(DTAINFO *dt)
  *
  *  Error returns:  ENMFIL
  */
-long xsnext(void)
+long __CDECL xsnext(void)
 {
     FCB *f;
     DTAINFO *dt;
@@ -668,7 +668,7 @@ long xsnext(void)
  *
  *  Function 0x57   f_datime
  */
-long xgsdtof(DOSTIME *buf, int h, int wrt)
+long __CDECL xgsdtof(DOSTIME *buf, int h, int wrt)
 {
     OFD *f = getofd(h);
 
@@ -876,7 +876,7 @@ static WORD update_fcb(OFD *fd,LONG posp,LONG len,BYTE *buf)
  */
 /* rename file, n unused, old path p1, new path p2 */
 /*ARGSUSED*/
-long xrename(int n, char *p1, char *p2)
+long __CDECL xrename(int n, char *p1, char *p2)
 {
     OFD *fd;
     FCB *f;
@@ -1087,7 +1087,7 @@ long xrename(int n, char *p1, char *p2)
  *              EPTHNF
  *              ckdrv()
  */
-long xchdir(char *p)
+long __CDECL xchdir(char *p)
 {
     DND *dnd;
     long rc;
@@ -1207,7 +1207,7 @@ void decr_curdir_usage(int n)
  *  Error returns:
  *                  EDRIVE
  */
-long xgetdir(char *buf, int drv)
+long __CDECL xgetdir(char *buf, int drv)
 {
     DND *p;
     int n;

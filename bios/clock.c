@@ -1073,7 +1073,7 @@ void clock_init(void)
 
 extern UWORD current_time, current_date; /* From bdos/time.c */
 
-void settime(LONG time)
+void __CDECL settime(LONG time)
 {
     /* Update GEMDOS time and date */
     current_time = LOWORD(time);
@@ -1115,7 +1115,7 @@ void settime(LONG time)
     }
 }
 
-LONG gettime(void)
+LONG __CDECL gettime(void)
 {
     if (FALSE)
     {

@@ -25,7 +25,7 @@ extern LONG proc_dregs[];
 extern LONG proc_aregs[];
 extern LONG proc_enum;
 extern LONG proc_usp;
-extern WORD proc_stk[];
+extern UWORD proc_stk[];
 
 extern LONG memvalid;
 extern LONG memval2;
@@ -69,7 +69,7 @@ extern LONG os_beg;
 extern LONG os_date;
 extern UWORD os_dosdate;
 extern WORD os_conf;
-extern void (*exec_os)(void) NORETURN;
+extern void (__CDECL *exec_os)(void) NORETURN;
 extern UBYTE *end_os;
 
 /* these symbols are automatically created by ld */
@@ -104,34 +104,34 @@ extern LONG os_magic;     /* if == 0x87654321, means that GEM is present */
 
 extern LONG savptr;
 
-extern void (*prt_stat)(void);
-extern void (*prt_vec)(void);
-extern void (*aux_stat)(void);
-extern void (*aux_vec)(void);
-extern void (*dump_vec)(void);
+extern void (__CDECL *prt_stat)(void);
+extern void (__CDECL *prt_vec)(void);
+extern void (__CDECL *aux_stat)(void);
+extern void (__CDECL *aux_vec)(void);
+extern void (__CDECL *dump_vec)(void);
 
 /* indirect BIOS vectors */
 
-extern LONG (*bconstat_vec[])(void);
-extern LONG (*bconin_vec[])(void);
-extern LONG (*bconout_vec[])(WORD, WORD);
-extern LONG (*bcostat_vec[])(void);
+extern LONG (__CDECL *bconstat_vec[])(void);
+extern LONG (__CDECL *bconin_vec[])(void);
+extern LONG (__CDECL *bconout_vec[])(WORD, WORD);
+extern LONG (__CDECL *bcostat_vec[])(void);
 
-extern LONG (*hdv_rw)(WORD rw, UBYTE *buf, WORD cnt, WORD recnr, WORD dev, LONG lrecnr);
-extern LONG (*hdv_bpb)(WORD dev);
-extern LONG (*hdv_mediach)(WORD dev);
-extern LONG (*hdv_boot)(void);
-extern void (*hdv_init)(void);
+extern LONG (__CDECL *hdv_rw)(WORD rw, UBYTE *buf, WORD cnt, WORD recnr, WORD dev, LONG lrecnr);
+extern LONG (__CDECL *hdv_bpb)(WORD dev);
+extern LONG (__CDECL *hdv_mediach)(WORD dev);
+extern LONG (__CDECL *hdv_boot)(void);
+extern void (__CDECL *hdv_init)(void);
 
-extern void (*bell_hook)(void);
-extern void (*kcl_hook)(void);
+extern void (__CDECL *bell_hook)(void);
+extern void (__CDECL *kcl_hook)(void);
 
-extern void (*etv_timer)(int);
-extern LONG (*etv_critic)(WORD err,WORD dev);
-extern void (*etv_term)(void);
+extern void (__CDECL *etv_timer)(int);
+extern LONG (__CDECL *etv_critic)(WORD err,WORD dev);
+extern void (__CDECL *etv_term)(void);
 
 
-extern void (*mousexvec)(WORD scancode);    /* Additional mouse buttons */
+extern void (__CDECL *mousexvec)(WORD scancode);    /* Additional mouse buttons */
 
 struct kbdvecs
 {
