@@ -10,7 +10,7 @@
 #ifndef _DESKINF_H
 #define _DESKINF_H
 
-WORD dr_code(PARMBLK *pparms);
+WORD __CDECL dr_code(PARMBLK *pparms);
 WORD inf_show(OBJECT *tree, WORD start);
 WORD inf_file_folder(BYTE *ppath, FNODE *pf);
 WORD inf_disk(BYTE dr_id);

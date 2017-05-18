@@ -202,7 +202,7 @@ struct _PARMBLK;
 
 typedef struct
 {
-        WORD    (*ub_code)(struct _PARMBLK *parmblock);
+        WORD    (__CDECL *ub_code)(struct _PARMBLK *parmblock);
         LONG    ub_parm;
 } USERBLK;
 

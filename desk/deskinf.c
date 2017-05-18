@@ -326,7 +326,7 @@ static WORD dr_fnode(UWORD last_state, UWORD curr_state, WORD x, WORD y,
 }
 
 
-WORD dr_code(PARMBLK *pparms)
+WORD __CDECL dr_code(PARMBLK *pparms)
 {
     GRECT oc;
     WORD  state;
