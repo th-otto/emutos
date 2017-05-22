@@ -667,6 +667,7 @@ _detect_32bit_address_bus:
 
         move.l  #0x12345678,d1          // First test value
         move.l  d1,(a0)                 // Write test value to 24-bit address
+        nop                             // flush pipeline
         // If we are on Atari hardware with 32-bit address bus but without
         // TT-RAM, then the instruction below will cause a Bus Error.
         cmp.l   0x0100000c,d1           // Did value appear on 32-bit mirror?
