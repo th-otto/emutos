@@ -512,7 +512,7 @@ WORD ins_app(WORD curr)
 }
 
 
- /*
+/*
  * insert icon into dialog
  */
 static void insert_icon(OBJECT *tree, WORD obj, WORD nicon)
