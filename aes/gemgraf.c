@@ -396,20 +396,6 @@ void bb_screen(WORD scrule, WORD scsx, WORD scsy, WORD scdx, WORD scdy,
 
 
 /*
- *  Routine to transform a standard form to device specific form
- */
-void gsx_trans(void *saddr, UWORD swb, void *daddr, UWORD dwb, UWORD h)
-{
-    gsx_fix(&gl_src, saddr, swb, h);
-    gl_src.fd_stand = TRUE;
-    gl_src.fd_nplanes = 1;
-
-    gsx_fix(&gl_dst, daddr, dwb, h);
-    vrn_trnfm(&gl_src, &gl_dst);
-}
-
-
-/*
  *  Determine char height based on yres in WS
  */
 static WORD get_char_height(WS *ws)

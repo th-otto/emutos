@@ -428,14 +428,6 @@ static WORD setup_iconblks(const ICONBLK *ibstart, WORD count)
         G.g_iblist[i].ib_htext = gl_hschar + 2;
     }
 
-    /*
-     * Finally we do the transforms
-     */
-    for (i = 0, p = maskstart; i < count; i++, p += num_bytes)
-        gsx_trans(p, iwb, p, iwb, ih);
-    for (i = 0, p = datastart; i < count; i++, p += num_bytes)
-        gsx_trans(p, iwb, p, iwb, ih);
-
     return 0;
 }
 

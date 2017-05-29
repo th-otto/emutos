@@ -537,9 +537,7 @@ void wait_for_accs(WORD bitmask)
  */
 void run_accs_and_desktop(void)
 {
-    WORD i;
     BOOL isgem;
-    BITBLK bi;
 
     /* load gem resource and fix it up before we go */
     gem_rsc_init();
@@ -554,12 +552,6 @@ void run_accs_and_desktop(void)
     gsx_init();                     /* do gsx open work station */
 
     load_accs(num_accs);            /* load up to 'num_accs' desk accessories */
-
-    /* fix up icons */
-    for (i = 0; i < 3; i++) {
-        bi = rs_bitblk[NOTEBB+i];
-        gsx_trans(bi.bi_pdata, bi.bi_wb, bi.bi_pdata, bi.bi_wb, bi.bi_hl);
-    }
 
     /* take the critical err handler int. */
     disable_interrupts();
