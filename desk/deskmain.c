@@ -1545,11 +1545,6 @@ WORD deskmain(void)
         centre_title(G.a_trees[ii]);
     }
 
-    for (ii = 0; ii < RS_NBB; ii++) /* initialize bit images */
-    {
-        app_tran(ii);
-    }
-
     rsrc_gaddr_rom(R_STRING, STASTEXT, (void **)&ad_ptext);
     rsrc_gaddr_rom(R_STRING, STASICON, (void **)&ad_picon);
 

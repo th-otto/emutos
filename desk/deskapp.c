@@ -344,19 +344,6 @@ static BYTE *app_parse(BYTE *pcurr, ANODE *pa)
 }
 
 
-void app_tran(WORD bi_num)
-{
-    BITBLK *pbi;
-    BITBLK lb;
-
-    rsrc_gaddr_rom(R_BITBLK, bi_num, (void **)&pbi);
-
-    lb = *pbi;
-
-    gsx_trans(lb.bi_pdata, lb.bi_wb, lb.bi_pdata, lb.bi_wb, lb.bi_hl);
-}
-
-
 /*
  * set up ICONBLK stuff - all the hard work is done here
  *
