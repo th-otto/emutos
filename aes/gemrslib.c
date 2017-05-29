@@ -31,6 +31,7 @@
 #include "geminit.h"
 #include "gemrslib.h"
 
+#include "kprint.h"
 #include "string.h"
 #include "nls.h"
 
@@ -229,17 +230,63 @@ static void fix_trindex(void)
 }
 
 
+#if CONF_WITH_COLORICONS
+static CICONBLK **get_coloricon_table(RSHDR *header)
+{
+    LONG *ctable;
+
+    if (header->rsh_vrsn & 0x0004)
+    {
+        ctable = (LONG *)((LONG)header + (ULONG) header->rsh_rssize);
+        if (ctable[1] != 0 && ctable[1] != -1)
+        {
+            ctable = (LONG *)(ctable[1] + (LONG)header);
+            return (CICONBLK **)ctable;
+        }
+    }
+    return NULL;
+}
+#endif
+
+
 static void fix_objects(void)
 {
     WORD ii;
     WORD obtype;
     OBJECT *obj;
 
+#if CONF_WITH_COLORICONS
+    CICONBLK **ctable;
+
+    ctable = get_coloricon_table(rs_hdr);
+#endif
+
     for (ii = 0; ii < rs_hdr->rsh_nobs; ii++)
     {
         obj = (OBJECT *)get_addr(R_OBJECT, ii);
         rs_obfix(obj, 0);
         obtype = obj->ob_type & 0x00ff;
+#if CONF_WITH_COLORICONS
+        if (obtype == G_CICON)
+        {
+            if (ctable)
+            {
+                obj->ob_spec.ciconblk = ctable[obj->ob_spec.index];
+                continue;
+            }
+            /*
+             * Actually an invalid resource file format.
+             * We can't fall through to the default handling though,
+             * as the ob_spec member is not a file offset.
+             * For the same reason, there is no way of finding
+             * the address of the ICONBLK structure without the
+             * extension table. To avoid crashes, change the
+             * object type to G_BOX instead.
+             */
+            obtype = obj->ob_type = G_BOX;
+            obj->ob_spec.index = 0x00FF1101L;
+        }
+#endif
         if ((obtype != G_BOX) && (obtype != G_IBOX) && (obtype != G_BOXCHAR))
             fix_long(&obj->ob_spec.index);
     }
@@ -278,6 +325,170 @@ static void fix_tedinfo(void)
 }
 
 
+#if CONF_WITH_COLORICONS
+
+/*
+ * fix up the pointers of the monochrome part of a coloricon
+ */
+static CICONBLK *fix_mono(CICONBLK *ptr, LONG plane_size)
+{
+    void *end;
+
+    /* data follows CICONBLK structure */
+    end = (char *)(ptr + 1);
+    ptr->monoblk.ib_pdata = end;
+    /* mask follows data */
+    end = (char *) end + plane_size;
+    ptr->monoblk.ib_pmask = end;
+    /* text follows mask */
+    end = (char *) end + plane_size;
+    /*
+     * There is space for a 12-character icon text.
+     * If it is longer, it is relocated just like other objects.
+     */
+    if (ptr->monoblk.ib_ptext == NULL)
+        ptr->monoblk.ib_ptext = end;
+    else
+        fix_long((LONG *)&ptr->monoblk.ib_ptext);
+    /* next CICONBLK structure follows icon text */
+    end = (char *) end + CICON_STR_SIZE;
+    return end;
+}
+
+
+/*
+ * fix up the pointers of a single color icon
+ */
+static void *fixup_cicon(CICON *ptr, LONG mono_size)
+{
+    void *end;
+    LONG color_size;
+
+    end = (char *) ptr + sizeof(CICON);
+    ptr->col_data = end;
+    color_size = ptr->num_planes * mono_size;
+    end = (char *) end + color_size;
+    ptr->col_mask = end;
+    end = (char *) end + mono_size;
+    if (ptr->sel_data)
+    {                                   /* there are some selected icons */
+        ptr->sel_data = end;
+        end = (char *) end + color_size;
+        ptr->sel_mask = end;
+        end = (char *) end + mono_size;
+    }
+    return end;
+}
+
+
+/*
+ * fix up the pointers of all color icons in the resource
+ */
+static void fixup_cicons(CICONBLK *ptr, WORD tot_icons, CICONBLK **carray)
+{
+    WORD tot_resicons;
+    WORD i, j;
+    LONG mono_size;                     /* size of a single mono icon in bytes */
+    CICON **next_res;
+    CICON *cicon;
+    WORD width, height;
+
+    for (i = 0; i < tot_icons; i++)
+    {
+        carray[i] = ptr;
+        width = ptr->monoblk.ib_wicon;
+        height = ptr->monoblk.ib_hicon;
+        /* in the file, first link contains number of CICON structures */
+        tot_resicons = (WORD)(LONG)(ptr->mainlist);
+        mono_size = calc_planesize(width, height);
+        next_res = &ptr->mainlist;
+        ptr = fix_mono(ptr, mono_size);
+        if (tot_resicons)
+        {
+            cicon = (CICON *)ptr;
+            for (j = 0; j < tot_resicons; j++)
+            {
+                *next_res = cicon;
+                next_res = &cicon->next_res;
+                cicon = fixup_cicon(cicon, mono_size);
+            }
+            *next_res = NULL;
+            ptr = (CICONBLK *)cicon;
+        }
+    }
+}
+
+
+/*
+ * Populate the G_CICON table
+ */
+static void fix_cicons(void)
+{
+    CICONBLK *ptr;
+    CICONBLK **cicondata;
+    CICONBLK **array_ptr;
+    WORD totalicons, i;
+
+    cicondata = get_coloricon_table(rs_hdr);
+    if (cicondata)
+    {
+        totalicons = 0;
+        array_ptr = cicondata;
+        while (*array_ptr++ != (CICONBLK *)-1L)
+            totalicons++;
+
+        /*
+         * the CICONBLK structures immediately follow the table
+         */
+        ptr = (CICONBLK *) array_ptr;
+
+        /* fixup pointers */
+        fixup_cicons(ptr, totalicons, cicondata);
+        /* transform color icon data */
+        for (i = 0; i < totalicons; i++)
+            fix_coloricon_data(cicondata[i]);
+    }
+}
+
+
+static void free_cicons(CICONBLK **carray)
+{
+    WORD i;
+    CICONBLK *ciconblk;
+    CICON *cicon;
+
+    for (i = 0; ; i++)
+    {
+        ciconblk = carray[i];
+        if (ciconblk == (CICONBLK *)-1L)
+            break;
+        cicon = ciconblk->mainlist;
+        if (cicon && cicon->num_planes > 1)
+        {
+            if (cicon->num_planes != gl_nplanes)
+            {
+                KDEBUG(("free col_data %p\n", cicon->col_data));
+                dos_free(cicon->col_data);
+            }
+            if (cicon->sel_data)
+            {
+                if (cicon->num_planes != gl_nplanes)
+                {
+                    dos_free(cicon->sel_data);
+                    KDEBUG(("free sel_data %p\n", cicon->sel_data));
+                }
+            } else
+            {
+                /* free the darkening mask */
+                KDEBUG(("free sel_mask %p\n", cicon->sel_mask));
+                dos_free(cicon->sel_mask);
+            }
+        }
+    }
+}
+#endif
+
+
 /*
  *  Set global addresses that are used by the resource library subroutines
  */
@@ -293,9 +504,24 @@ static void rs_sglobe(AESGLOBAL *pglobal)
  */
 WORD rs_free(AESGLOBAL *pglobal)
 {
+#if CONF_WITH_COLORICONS
+    RSHDR *header;
+    CICONBLK **ctable;
+
+    rs_sglobe(pglobal);                 /* set global values */
+
+    header = rs_hdr;
+
+    ctable = get_coloricon_table(header);
+    if (ctable)
+        free_cicons(ctable);
+
+    return dos_free(header) == 0;
+#else
     rs_global = pglobal;
 
     return !dos_free(rs_global->ap_rscmem);
+#endif
 }
 
 
@@ -342,15 +568,30 @@ WORD rs_saddr(AESGLOBAL *pglobal, UWORD rtype, UWORD rindex, void *rsaddr)
 static WORD rs_readit(AESGLOBAL *pglobal,UWORD fd)
 {
     WORD ibcnt;
-    UWORD rslsize;
+    ULONG rslsize;
     RSHDR hdr_buff;
 
     /* read the header */
     if (dos_read(fd, sizeof(hdr_buff), &hdr_buff) != sizeof(hdr_buff))
         return FALSE;           /* error or short read */
 
-    /* get size of resource & allocate memory */
-    rslsize = hdr_buff.rsh_rssize;
+    /* get size of resource */
+#if CONF_WITH_COLORICONS
+    if (hdr_buff.rsh_vrsn & 0x0004) /* New format? */
+    {
+        /* seek to the 1st entry of the table */
+        if (dos_lseek(fd, 0, (ULONG)hdr_buff.rsh_rssize) != hdr_buff.rsh_rssize)
+            return FALSE;
+        /* read the size */
+        if (dos_read(fd, sizeof(ULONG), &rslsize) != sizeof(ULONG))
+            return FALSE;
+    } else
+#endif
+    {
+        rslsize = hdr_buff.rsh_rssize;
+    }
+
+    /* allocate memory */
     rs_hdr = (RSHDR *)dos_alloc_anyram(rslsize);
     if (!rs_hdr)
         return FALSE;
@@ -370,6 +611,9 @@ static WORD rs_readit(AESGLOBAL *pglobal,UWORD fd)
      * transfer RT_TRINDEX to global and turn all offsets from
      * base of file into pointers
      */
+#if CONF_WITH_COLORICONS
+    fix_cicons();                       /* fix color icons */
+#endif
     fix_trindex();
     fix_tedinfo();
     ibcnt = rs_hdr->rsh_nib;

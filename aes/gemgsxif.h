@@ -60,4 +60,9 @@ void g_vsl_width(WORD width);
 void vex_wheelv(PFVOID new, PFVOID *old);
 #endif
 
+#if CONF_WITH_COLORICONS
+void g_vs_color(WORD color, WORD *rgb);
+WORD g_vq_color(WORD color, WORD set_flag, WORD *rgb);
+#endif
+
 #endif

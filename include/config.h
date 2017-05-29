@@ -236,6 +236,9 @@
 # ifndef CONF_WITH_DESKTOP_SHORTCUTS
 #  define CONF_WITH_DESKTOP_SHORTCUTS 0
 # endif
+# ifndef CONF_WITH_COLORICONS
+#  define CONF_WITH_COLORICONS 0
+# endif
 # ifndef CONF_WITH_PCGEM
 #  define CONF_WITH_PCGEM 0
 # endif
@@ -998,6 +1001,14 @@
  */
 #ifndef CONF_WITH_WINDOW_ICONS
 # define CONF_WITH_WINDOW_ICONS 1
+#endif
+
+/*
+ * Set CONF_WITH_COLORICONS to 1 to add support for
+ * color icons in resource files
+ */
+#ifndef CONF_WITH_COLORICONS
+# define CONF_WITH_COLORICONS 1
 #endif
 
 /*

@@ -325,6 +325,16 @@ static void just_draw(OBJECT *tree, WORD obj, WORD sx, WORD sy)
                     NULL, t.g_x, t.g_y, gl_width/8, bi.bi_wb * 8,
                     bi.bi_hl, MD_TRANS, bi.bi_color, WHITE);
             break;
+#if CONF_WITH_COLORICONS
+        case G_CICON:
+            if (spec.ciconblk->mainlist)
+            {
+                gr_cicon(state, &t, spec.ciconblk);
+                state &= ~SELECTED;
+                break;
+            }
+            /* else fall through */
+#endif
         case G_ICON:
             ib = *(spec.iconblk);
             ib.ib_xicon += t.g_x;
@@ -710,6 +720,9 @@ void ob_change(OBJECT *tree, WORD obj, UWORD new_state, WORD redraw)
         else
         {
             if ((obtype != G_ICON) &&
+#if CONF_WITH_COLORICONS
+               (obtype != G_CICON) &&
+#endif
                ((new_state ^ curr_state) & SELECTED) )
             {
                 bb_fill(MD_XOR, FIS_SOLID, IP_SOLID, t.g_x+th, t.g_y+th,

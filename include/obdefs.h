@@ -87,6 +87,7 @@
 #define G_FBOXTEXT 30
 #define G_ICON 31
 #define G_TITLE 32
+#define G_CICON 33
                                                 /* Object flags          */
 #define NONE 0x0
 #define SELECTABLE 0x1
@@ -173,6 +174,22 @@ typedef struct
         WORD    ib_htext;
 } ICONBLK;
 
+typedef struct _cicon {
+    WORD    num_planes;         /* number of planes in the following data */
+    WORD    *col_data;          /* pointer to color bitmap in standard form */
+    WORD    *col_mask;          /* pointer to single plane mask of col_data */
+    WORD    *sel_data;          /* pointer to color bitmap of selected icon */
+    WORD    *sel_mask;          /* pointer to single plane mask of selected icon */
+    struct _cicon *next_res;    /* pointer to next icon for a different resolution */
+} CICON;
+
+typedef struct _ciconblk {
+    ICONBLK monoblk;            /* default monochrome icon */
+    CICON *mainlist;            /* list of color icons for different resolutions */
+} CICONBLK;
+
+#define CICON_STR_SIZE 12
+
 typedef struct
 {
         void    *bi_pdata;              /* ptr to bit forms data        */
@@ -211,6 +228,7 @@ typedef union obspecptr
     union obspecptr *indirect;
     TEDINFO     *tedinfo;
     ICONBLK     *iconblk;
+    CICONBLK    *ciconblk;
     BITBLK      *bitblk;
     USERBLK     *userblk;
     char        *free_string;

@@ -573,3 +573,27 @@ void vex_wheelv(PFVOID new, PFVOID *old)
     m_lptr2(old);
 }
 #endif
+
+
+#if CONF_WITH_COLORICONS
+void g_vs_color(WORD color, WORD *rgb)
+{
+    intin[0] = color;
+    intin[1] = rgb[0];
+    intin[2] = rgb[1];
+    intin[3] = rgb[2];
+    gsx_ncode(SET_COLOR_REP, 0, 4);
+}
+
+
+WORD g_vq_color(WORD color, WORD set_flag, WORD *rgb)
+{
+    intin[0] = color;
+    intin[1] = set_flag;
+    gsx_ncode(INQUIRE_COLOR_REP, 0, 2);
+    rgb[0] = intout[1];
+    rgb[1] = intout[2];
+    rgb[2] = intout[3];
+    return intout[0];
+}
+#endif

@@ -29,4 +29,16 @@ void gr_gicon(WORD state, WORD *pmask, WORD *pdata, BYTE *ptext, WORD ch,
               WORD chx, WORD chy, GRECT *pi, GRECT *pt);
 void gr_box(WORD x, WORD y, WORD w, WORD h, WORD th);
 
+#if CONF_WITH_COLORICONS
+/*
+ * return the number of bytes of a single plane
+ */
+static __inline__ LONG calc_planesize(WORD w, WORD h)
+{
+    return (LONG) ((w + 15) / 16) * h * 2;
+}
+void fix_coloricon_data(CICONBLK *ciconblk);
+void gr_cicon(WORD state, const GRECT *pos, CICONBLK *ciconblk);
+#endif
+
 #endif
