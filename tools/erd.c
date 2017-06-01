@@ -3009,7 +3009,7 @@ PRIVATE unsigned short get_ushort(USHORT *p)
  */
 PRIVATE unsigned long get_offset(OFFSET *p)
 {
-    return (p->b1<<24) | (p->b2<<16) | (p->b3<<8) | p->b4;
+    return ((unsigned int)p->b1<<24) | ((unsigned int)p->b2<<16) | ((unsigned int)p->b3<<8) | (unsigned int)p->b4;
 }
 
 /*
