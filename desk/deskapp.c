@@ -1092,7 +1092,7 @@ void app_blddesk(void)
     /* free all this window's kids and set size  */
     obj_wfree(DROOT, 0, 0, gl_width, gl_height);
     ptr = (LONG *)&global[3];
-    G.g_screen[DROOT].ob_spec = *ptr;
+    G.g_screen[DROOT].ob_spec.index = *ptr;
 
     for(pa = G.g_ahead; pa; pa = pa->a_next)
     {
@@ -1120,7 +1120,7 @@ void app_blddesk(void)
             si = &G.g_screeninfo[obid];
             si->icon.index = icon;
             pic = &si->icon.block;
-            pob->ob_spec = (LONG)pic;
+            pob->ob_spec.iconblk = pic;
             memcpy(pic, &G.g_iblist[icon], sizeof(ICONBLK));
             pic->ib_xicon = ((G.g_wicon - pic->ib_wicon) / 2);
             pic->ib_ptext = pa->a_pappl;

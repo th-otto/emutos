@@ -24,7 +24,7 @@
 #include "gemobjop.h"
 
 
-BYTE ob_sst(OBJECT *tree, WORD obj, LONG *pspec, WORD *pstate, WORD *ptype,
+BYTE ob_sst(OBJECT *tree, WORD obj, OBSPEC *pspec, WORD *pstate, WORD *ptype,
             WORD *pflags, GRECT *pt, WORD *pth)
 {
     WORD    th;
@@ -36,7 +36,7 @@ BYTE ob_sst(OBJECT *tree, WORD obj, LONG *pspec, WORD *pstate, WORD *ptype,
     *pflags = objptr->ob_flags;
     *pspec = objptr->ob_spec;
     if (objptr->ob_flags & INDIRECT)
-        *pspec = *(LONG *)objptr->ob_spec;
+        *pspec = *(objptr->ob_spec.indirect);
 
     *pstate = objptr->ob_state;
     *ptype = objptr->ob_type & 0x00ff;
@@ -50,7 +50,7 @@ BYTE ob_sst(OBJECT *tree, WORD obj, LONG *pspec, WORD *pstate, WORD *ptype,
     case G_BOXTEXT:
     case G_FTEXT:
     case G_FBOXTEXT:
-        ted = (TEDINFO *)*pspec;
+        ted = pspec->tedinfo;
         th = ted->te_thickness;
         break;
     case G_BOX:

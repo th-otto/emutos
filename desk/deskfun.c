@@ -598,7 +598,7 @@ static WORD fun_file2desk(PNODE *pn_src, WORD icontype_src, ANODE *an_dest, WORD
             break;
 #endif
         case AT_ISDISK:
-            dicon = (ICONBLK *)G.g_screen[dobj].ob_spec;
+            dicon = G.g_screen[dobj].ob_spec.iconblk;
             pathname[0] = LOBYTE(dicon->ib_char);
             operation = (keystate&MODE_CTRL) ? OP_MOVE : OP_COPY;
             break;
@@ -687,7 +687,7 @@ static WORD fun_file2any(WORD sobj, WNODE *wn_dest, ANODE *an_dest, FNODE *fn_de
     else
 #endif
     {
-        ib_src = (ICONBLK *)G.g_screen[sobj].ob_spec;
+        ib_src = G.g_screen[sobj].ob_spec.iconblk;
         build_root_path(path, ib_src->ib_char);
         strcat(path,"*.*");
     }

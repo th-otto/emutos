@@ -364,7 +364,7 @@ void inf_numset(OBJECT *tree, WORD obj, ULONG value)
     TEDINFO *ted;
     OBJECT  *objptr = tree + obj;
 
-    ted = (TEDINFO *)objptr->ob_spec;
+    ted = objptr->ob_spec.tedinfo;
     len = ted->te_txtlen - 1;
 
     sprintf(ted->te_ptext,"%*.*lu",len,len,value);
@@ -435,7 +435,7 @@ WORD inf_file_folder(BYTE *ppath, FNODE *pf)
     tree = G.a_trees[ADFFINFO];
     title = (pf->f_attr & F_SUBDIR) ? STFOINFO : STFIINFO;
     obj = tree + FFTITLE;
-    obj->ob_spec = (LONG) ini_str(title);
+    obj->ob_spec.free_string = ini_str(title);
     centre_title(tree);
 
     strcpy(srcpth, ppath);
