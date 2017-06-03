@@ -5,6 +5,12 @@
 # This script deploys the built binaries to SourceForge:
 # https://sourceforge.net/projects/emutos/files/
 
+# do not deploy on forked repos
+if [ "$TRAVIS_REPO_SLUG" != emutos/emutos ]
+then
+  exit 0
+fi
+
 # To enable passwordless SSH:
 # - Our private/public key pair must have been installed (see install_ssh_id.sh)
 # - Our public key must have been authorized on SourceForge, in the account of
