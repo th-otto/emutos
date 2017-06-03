@@ -111,7 +111,7 @@ ELF = 0
 ifeq (1,$(ELF))
 # Standard ELF toolchain
 TOOLCHAIN_PREFIX = m68k-elf-
-TOOLCHAIN_CFLAGS = -fleading-underscore -Wa,--register-prefix-optional -fno-reorder-functions -DELF_TOOLCHAIN
+TOOLCHAIN_CFLAGS = -fleading-underscore -Wa,--register-prefix-optional -fno-reorder-functions -fno-merge-constants -DELF_TOOLCHAIN
 else
 # MiNT toolchain
 TOOLCHAIN_PREFIX = m68k-atari-mint-
@@ -163,6 +163,9 @@ OBJDUMP = $(TOOLCHAIN_PREFIX)objdump
 
 # The objcopy utility
 OBJCOPY = $(TOOLCHAIN_PREFIX)objcopy
+
+# The symbol print utility
+NM = $(TOOLCHAIN_PREFIX)nm
 
 # the native C compiler, for tools
 NATIVECC = gcc -ansi -pedantic $(WARNFLAGS) -W $(BUILD_TOOLS_OPTFLAGS)
@@ -397,6 +400,9 @@ TOCLEAN += obj/*.ld
 obj/emutospp.ld: emutos.ld include/config.h tosvars.ld
 	$(CPP) $(CPPFLAGS) -P -x c $< -o $@
 
+obj/emutosppsym.ld: emutos.ld include/config.h tosvars.ld
+	$(CPP) $(CPPFLAGS) -DCREATE_SYMTAB -P -x c $< -o $@
+
 #
 # the maps must be built at the same time as the images, to enable
 # one generic target to deal with all edited disassembly.
@@ -404,8 +410,8 @@ obj/emutospp.ld: emutos.ld include/config.h tosvars.ld
 
 TOCLEAN += *.img *.map
 
-emutos.img: $(OBJECTS) obj/emutospp.ld Makefile
-	$(LD) $(CORE_OBJ) $(LIBS) $(OPTIONAL_OBJ) $(LIBS) $(LDFLAGS) -Wl,-Map=emutos.map -o emutos.img
+emutos.img: $(OBJECTS) obj/emutospp.ld Makefile emutossym.img
+	@echo LD $@; $(LD) $(CORE_OBJ) $(LIBS) $(OPTIONAL_OBJ) $(LIBS) $(LDFLAGS) -Wl,-Map=emutos.map -o emutos.img
 	@if [ $$(($$(awk '/^\.data /{print $$3}' emutos.map))) -gt 0 ]; then \
 	  echo "### Warning: The DATA segment is not empty."; \
 	  echo "### Please examine emutos.map and use \"const\" where appropriate."; \
@@ -415,6 +421,9 @@ emutos.img: $(OBJECTS) obj/emutospp.ld Makefile
 " BSS=$(call SHELL_SYMADDR,__bss,emutos.map)"\
 " STKBOT=$(call SHELL_SYMADDR,_stkbot,emutos.map)"\
 " MEMBOT=$(call SHELL_SYMADDR,__end_os_stram,emutos.map)"
+
+emutossym.img: $(OBJECTS) obj/emutosppsym.ld Makefile
+	@echo LD $@; $(LD) $(CORE_OBJ) $(LIBS) $(OPTIONAL_OBJ) $(LIBS) -Wl,-T,obj/emutosppsym.ld -o $@
 
 #
 # 128kB Image
@@ -499,7 +508,7 @@ aranym: override DEF += -DMACHINE_ARANYM
 aranym: CPUFLAGS = -m68040
 aranym:
 	@echo "# Building ARAnyM EmuTOS into $(ROM_ARANYM)"
-	$(MAKE) CPUFLAGS=$(CPUFLAGS) DEF='$(DEF)' ROM_512=$(ROM_ARANYM) $(ROM_ARANYM)
+	$(MAKE) CPUFLAGS=$(CPUFLAGS) DEF='$(DEF)' ROM_512=$(ROM_ARANYM) $(ROM_ARANYM) emutos-aranym.sym
 	@MEMBOT=$(call SHELL_SYMADDR,__end_os_stram,emutos.map);\
 	echo "# RAM used: $$(($$MEMBOT)) bytes ($$(($$MEMBOT - $(MEMBOT_TOS404))) bytes more than TOS 4.04)"
 
@@ -1067,8 +1076,15 @@ show: dsm.txt
 
 TOCLEAN += *.sym
 
-%.sym: emutos.img tools/map2sym.sh
-	$(SHELL) tools/map2sym.sh emutos.map >$@
+%.sym: emutossym.img
+	@$(NM) $< | \
+	sed -e 's/^fffffffff/f/' \
+	    -e 's/ T _os_/ D _os_/' \
+	    -e 's/ T _fnt_/ D _fnt_/' \
+	    -e '/ t L/d' \
+	    -e '/ t \.L/d' \
+	    -e '/ t .*\.o$$/d' | \
+	sort > $@
 
 #
 # indent - indents the files except when there are warnings

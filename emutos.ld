@@ -15,7 +15,15 @@
 #include "include/config.h"
 
 /* Create a plain binary file, without any header */
+#ifdef CREATE_SYMTAB
+#ifdef __ELF__
+OUTPUT_FORMAT(elf32-m68k)
+#else
+OUTPUT_FORMAT(a.out-zero-big)
+#endif
+#else
 OUTPUT_FORMAT(binary)
+#endif
 
 /*
  * The system variables have fixed addresses,
