@@ -319,12 +319,6 @@ static void men_update(void)
 
 #if CONF_WITH_SHUTDOWN
     menu_ienable(tree, QUITITEM, can_shutdown());
-#else
-    menu_ienable(tree, QUITITEM, 0);
-#endif
-
-#if WITH_CLI == 0
-    menu_ienable(tree, CLIITEM, 0);
 #endif
 
 }

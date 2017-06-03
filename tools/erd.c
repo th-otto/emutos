@@ -748,7 +748,7 @@ PRIVATE int write_bitblk(FILE *fp);
 PRIVATE int write_iconblk(FILE *fp);
 PRIVATE int write_include(FILE *fp,char *name);
 PRIVATE int write_object(FILE *fp);
-PRIVATE int write_obspec(FILE *fp,OBJECT *obj);
+PRIVATE int write_obspec(FILE *fp,OBJECT *obj,const char *conditional);
 PRIVATE int write_shared(FILE *fp);
 PRIVATE int write_tedinfo(FILE *fp);
 PRIVATE int write_tree(FILE *fp);
@@ -1866,6 +1866,11 @@ DEF_ENTRY *d;
 char temp[MAX_STRLEN];
 const char *p;
 char *base = (char *)rschdr;
+int ismenu = 0;
+short clientry = -1;
+short quitentry = -1;
+short sepitem = -1;
+short filebox = -1;
 
     if (!generate_objects)
         return 0;
@@ -1880,8 +1885,16 @@ char *base = (char *)rschdr;
     nobs = rsh.nobs;
     ntree = rsh.ntree;
     for (i = 0, j = 0, tree = 0; i < nobs; i++, j++, obj++) {
+        const char *conditional = NULL;
+        unsigned short flags;
+        short height;
+        short y;
+
         if (tree < ntree) {
             if ((OBJECT *)(base+get_offset(&trindex[tree])) == obj) {
+                ismenu = 0;
+                clientry = quitentry = sepitem -1;
+                filebox = -1;
                 d = lookup_tree(tree);
                 if (first_time && d) {
                     if (d->conditional) {
@@ -1890,7 +1903,34 @@ char *base = (char *)rschdr;
                     }
                 }
                 fprintf(fp,"#define TR%d %d\n",tree,i);
-                fprintf(fp,"/* TREE %d */\n\n",tree);
+                fprintf(fp,"/* TREE %d */",tree);
+                if (d)
+                {
+                    fprintf(fp," /* %s */", d->name);
+                    if (strcmp(d->name, "ADMENU") == 0)
+                    {
+                       ismenu = 1;
+                       for (j = 0; ; j++)
+                       {
+                           flags = get_ushort(&obj[j].ob_flags);
+                           if ((d=lookup_object(tree,j)) != NULL)
+                           {
+                                if (strcmp(d->name, "L3ITEM") == 0)
+                                    sepitem = j;
+                                if (strcmp(d->name, "CLIITEM") == 0)
+                                    clientry = j;
+                                if (strcmp(d->name, "QUITITEM") == 0)
+                                {
+                                    quitentry = j;
+                                    filebox = get_short(&obj[j].ob_next);
+                                }
+                           }
+                           if (flags & LASTOB)
+                               break;
+                       }
+                    }
+                }
+                fprintf(fp,"\n\n");
                 tree++;
                 j = 0;                              /* relative object number */
             }
@@ -1906,14 +1946,72 @@ char *base = (char *)rschdr;
 
         fprintf(fp,"%-44s/*** %d ***/",temp,j);
         if ((d=lookup_object(tree-1,j)))
+        {
             fprintf(fp,"  /* %s */",d->name);
+            if (ismenu && j == clientry)
+            {
+                conditional = "WITH_CLI";
+            }
+            if (ismenu && j == quitentry)
+            {
+                conditional = "CONF_WITH_SHUTDOWN";
+            }
+            if (ismenu && j == sepitem)
+            {
+                conditional = "WITH_CLI || CONF_WITH_SHUTDOWN";
+            }
+        }
         fprintf(fp,"\n");
-        fprintf(fp,"     %s,\n",decode_flags(get_ushort(&obj->ob_flags)));
+        flags = get_ushort(&obj->ob_flags);
+        if (conditional)
+        {
+            fprintf(fp,"#if %s\n", conditional);
+            fprintf(fp,"     %s,\n",decode_flags(flags));
+            fprintf(fp,"#else\n");
+            fprintf(fp,"     %s,\n",decode_flags(flags|HIDETREE));
+            fprintf(fp,"#endif\n");
+        } else
+        {
+            fprintf(fp,"     %s,\n",decode_flags(flags));
+        }
         fprintf(fp,"     %s,\n",decode_state(get_ushort(&obj->ob_state)));
-        write_obspec(fp,obj);
-        fprintf(fp,"     %d, %d, %d, %d},\n\n",
-                get_short(&obj->ob_x),get_short(&obj->ob_y),
-                get_short(&obj->ob_width),get_short(&obj->ob_height));
+        write_obspec(fp,obj,conditional);
+        height = get_short(&obj->ob_height);
+        y = get_short(&obj->ob_y);
+        if (ismenu && j == filebox)
+        {
+            fprintf(fp,"#if WITH_CLI && CONF_WITH_SHUTDOWN\n");
+            fprintf(fp,"     %d, %d, %d, %d\n",
+                    get_short(&obj->ob_x),y,
+                    get_short(&obj->ob_width),height);
+            fprintf(fp,"#elif WITH_CLI || CONF_WITH_SHUTDOWN\n");
+            fprintf(fp,"     %d, %d, %d, %d\n",
+                    get_short(&obj->ob_x),y,
+                    get_short(&obj->ob_width),height - 1);
+            fprintf(fp,"#else\n");
+            fprintf(fp,"     %d, %d, %d, %d\n",
+                    get_short(&obj->ob_x),y,
+                    get_short(&obj->ob_width),height - 3);
+            fprintf(fp,"#endif\n");
+            fprintf(fp,"     },\n\n");
+        } else if (ismenu && j == quitentry)
+        {
+            fprintf(fp,"#if CONF_WITH_SHUTDOWN && !WITH_CLI\n");
+            fprintf(fp,"     %d, %d, %d, %d\n",
+                    get_short(&obj->ob_x),y-1,
+                    get_short(&obj->ob_width),height);
+            fprintf(fp,"#else\n");
+            fprintf(fp,"     %d, %d, %d, %d\n",
+                    get_short(&obj->ob_x),y,
+                    get_short(&obj->ob_width),height);
+            fprintf(fp,"#endif\n");
+            fprintf(fp,"     },\n\n");
+        } else
+        {
+            fprintf(fp,"     %d, %d, %d, %d},\n\n",
+                    get_short(&obj->ob_x),y,
+                    get_short(&obj->ob_width),height);
+        }
     }
     if (!first_time)
         fprintf(fp,"#endif\n");
@@ -2382,13 +2480,17 @@ int i, last = 0;
 /*
  *  writes formatted obspec to output
  */
-PRIVATE int write_obspec(FILE *fp,OBJECT *obj)
+PRIVATE int write_obspec(FILE *fp,OBJECT *obj,const char *conditional)
 {
 int xlate, type;
 char *p;
 char temp[MAX_STRLEN];
 char *base = (char *)rschdr;
 
+    if (conditional != NULL)
+    {
+        fprintf(fp,"#if %s\n", conditional);
+    }
     fprintf(fp,"     ");
 
     type = get_ushort(&obj->ob_type) & 0xff;
@@ -2445,6 +2547,12 @@ char *base = (char *)rschdr;
         fprintf(fp,"{ (LONG)%ldL }, /* generate number for unknown ob_type 0x%02x */\n",
                 get_offset(&obj->ob_spec),type);
         break;
+    }
+    if (conditional != 0)
+    {
+        fprintf(fp,"#else\n");
+        fprintf(fp,"     { (LONG) \"\" },\n");
+        fprintf(fp,"#endif\n");
     }
 
     return ferror(fp) ? -1 : 0;
