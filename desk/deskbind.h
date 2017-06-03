@@ -58,6 +58,14 @@
 #define TIMEFORM_IDT    2       /* use format from _IDT cookie */
 
 
+#if CONF_WITH_COLORICONS
+#define MONOBLK     monoblk.
+#define DESKICONBLK CICONBLK
+#else
+#define MONOBLK
+#define DESKICONBLK ICONBLK
+#endif
+
 /*
  * An object in the g_screen[] array can be one of two types; each type
  * needs additional data, as follows:
@@ -73,7 +81,7 @@
 typedef struct
 {
     WORD index;         /* index into G.g_iblist[] (transformed icon data/mask */
-    ICONBLK block;      /* the ICONBLK for this object */
+    DESKICONBLK block;  /* the ICONBLK or CICONBLK for this object */
 } ICONINFO;
 
 typedef union
@@ -178,7 +186,7 @@ typedef struct
 
 /*GLOBAL*/ WORD         g_numiblks;             /* number of icon blocks */
 /*GLOBAL*/ UWORD        **g_origmask;           /* ptr to array of ptrs to untransformed icon mask */
-/*GLOBAL*/ ICONBLK      *g_iblist;              /* ptr to array of icon blocks */
+/*GLOBAL*/ DESKICONBLK  *g_iblist;              /* ptr to array of icon blocks */
 
 /*GLOBAL*/ CSAVE        g_cnxsave;
 

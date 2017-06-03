@@ -251,8 +251,12 @@ WORD obj_get_obid(WORD drive)
 
     for (objnum = G.g_screen[DROOT].ob_head; objnum >= 0; objnum = G.g_screen[objnum].ob_next)
     {
-        if (G.g_screen[objnum].ob_type == G_ICON)
-            if (LOBYTE(G.g_screeninfo[objnum].icon.block.ib_char) == drive)
+        if (G.g_screen[objnum].ob_type == G_ICON
+#if CONF_WITH_COLORICONS
+            || G.g_screen[objnum].ob_type == G_CICON
+#endif
+            )
+            if (LOBYTE(G.g_screeninfo[objnum].icon.block.MONOBLK ib_char) == drive)
                 return objnum;
     }
 

@@ -55,6 +55,8 @@ release-512k:
 	cp etos512k.img etos512k.sym $(RELEASE_DIR)/$(RELEASE_512K)
 	cp desk/icon.def $(RELEASE_DIR)/$(RELEASE_512K)/emuicon.def
 	cp desk/icon.rsc $(RELEASE_DIR)/$(RELEASE_512K)/emuicon.rsc
+	cp desk/cicon.def $(RELEASE_DIR)/$(RELEASE_512K)/emucicn.def
+	cp desk/cicon.rsc $(RELEASE_DIR)/$(RELEASE_512K)/emucicn.rsc
 	cat doc/readme-512k.txt readme.txt >$(RELEASE_DIR)/$(RELEASE_512K)/readme.txt
 	mkdir $(RELEASE_DIR)/$(RELEASE_512K)/doc
 	cp $(DOCFILES) $(RELEASE_DIR)/$(RELEASE_512K)/doc
@@ -72,6 +74,8 @@ release-256k:
 	cp etos256*.img $(RELEASE_DIR)/$(RELEASE_256K)
 	cp desk/icon.def $(RELEASE_DIR)/$(RELEASE_256K)/emuicon.def
 	cp desk/icon.rsc $(RELEASE_DIR)/$(RELEASE_256K)/emuicon.rsc
+	cp desk/cicon.def $(RELEASE_DIR)/$(RELEASE_256K)/emucicn.def
+	cp desk/cicon.rsc $(RELEASE_DIR)/$(RELEASE_256K)/emucicn.rsc
 	cat doc/readme-256k.txt readme.txt >$(RELEASE_DIR)/$(RELEASE_256K)/readme.txt
 	mkdir $(RELEASE_DIR)/$(RELEASE_256K)/doc
 	cp $(DOCFILES) $(RELEASE_DIR)/$(RELEASE_256K)/doc
@@ -123,6 +127,8 @@ release-aranym:
 	cp $(ROM_ARANYM) $(RELEASE_DIR)/$(RELEASE_ARANYM)
 	cp desk/icon.def $(RELEASE_DIR)/$(RELEASE_ARANYM)/emuicon.def
 	cp desk/icon.rsc $(RELEASE_DIR)/$(RELEASE_ARANYM)/emuicon.rsc
+	cp desk/cicon.def $(RELEASE_DIR)/$(RELEASE_ARANYM)/emucicn.def
+	cp desk/cicon.rsc $(RELEASE_DIR)/$(RELEASE_ARANYM)/emucicn.rsc
 	cat doc/readme-aranym.txt readme.txt >$(RELEASE_DIR)/$(RELEASE_ARANYM)/readme.txt
 	mkdir $(RELEASE_DIR)/$(RELEASE_ARANYM)/doc
 	cp $(DOCFILES) $(RELEASE_DIR)/$(RELEASE_ARANYM)/doc
@@ -140,6 +146,8 @@ release-firebee:
 	cp $(SREC_FIREBEE) $(RELEASE_DIR)/$(RELEASE_FIREBEE)
 	cp desk/icon.def $(RELEASE_DIR)/$(RELEASE_FIREBEE)/emuicon.def
 	cp desk/icon.rsc $(RELEASE_DIR)/$(RELEASE_FIREBEE)/emuicon.rsc
+	cp desk/cicon.def $(RELEASE_DIR)/$(RELEASE_FIREBEE)/emucicn.def
+	cp desk/cicon.rsc $(RELEASE_DIR)/$(RELEASE_FIREBEE)/emucicn.rsc
 	cat doc/readme-firebee.txt readme.txt >$(RELEASE_DIR)/$(RELEASE_FIREBEE)/readme.txt
 	mkdir $(RELEASE_DIR)/$(RELEASE_FIREBEE)/doc
 	cp $(DOCFILES) $(RELEASE_DIR)/$(RELEASE_FIREBEE)/doc
@@ -161,6 +169,8 @@ release-amiga-rom:
 	cp $(VAMPIRE_ROM_AMIGA) $(RELEASE_DIR)/$(RELEASE_AMIGA_ROM)
 	cp desk/icon.def $(RELEASE_DIR)/$(RELEASE_AMIGA_ROM)/emuicon.def
 	cp desk/icon.rsc $(RELEASE_DIR)/$(RELEASE_AMIGA_ROM)/emuicon.rsc
+	cp desk/cicon.def $(RELEASE_DIR)/$(RELEASE_AMIGA_ROM)/emucicn.def
+	cp desk/cicon.rsc $(RELEASE_DIR)/$(RELEASE_AMIGA_ROM)/emucicn.rsc
 	cat doc/readme-amiga-rom.txt readme.txt >$(RELEASE_DIR)/$(RELEASE_AMIGA_ROM)/readme.txt
 	mkdir $(RELEASE_DIR)/$(RELEASE_AMIGA_ROM)/doc
 	cp $(DOCFILES) $(RELEASE_DIR)/$(RELEASE_AMIGA_ROM)/doc
@@ -181,6 +191,8 @@ release-amiga-floppy:
 	cp $(EMUTOS_VAMPIRE_ADF) $(RELEASE_DIR)/$(RELEASE_AMIGA_FLOPPY)
 	cp desk/icon.def $(RELEASE_DIR)/$(RELEASE_AMIGA_FLOPPY)/emuicon.def
 	cp desk/icon.rsc $(RELEASE_DIR)/$(RELEASE_AMIGA_FLOPPY)/emuicon.rsc
+	cp desk/cicon.def $(RELEASE_DIR)/$(RELEASE_AMIGA_FLOPPY)/emucicn.def
+	cp desk/cicon.rsc $(RELEASE_DIR)/$(RELEASE_AMIGA_FLOPPY)/emucicn.rsc
 	cat doc/readme-amiga-floppy.txt readme.txt >$(RELEASE_DIR)/$(RELEASE_AMIGA_FLOPPY)/readme.txt
 	mkdir $(RELEASE_DIR)/$(RELEASE_AMIGA_FLOPPY)/doc
 	cp $(DOCFILES) $(RELEASE_DIR)/$(RELEASE_AMIGA_FLOPPY)/doc
@@ -228,6 +240,8 @@ release-prg:
 	cp emutos*.prg $(RELEASE_DIR)/$(RELEASE_PRG)
 	cp desk/icon.def $(RELEASE_DIR)/$(RELEASE_PRG)/emuicon.def
 	cp desk/icon.rsc $(RELEASE_DIR)/$(RELEASE_PRG)/emuicon.rsc
+	cp desk/cicon.def $(RELEASE_DIR)/$(RELEASE_PRG)/emucicn.def
+	cp desk/cicon.rsc $(RELEASE_DIR)/$(RELEASE_PRG)/emucicn.rsc
 	cat doc/readme-prg.txt readme.txt >$(RELEASE_DIR)/$(RELEASE_PRG)/readme.txt
 	mkdir $(RELEASE_DIR)/$(RELEASE_PRG)/doc
 	cp $(DOCFILES) $(RELEASE_DIR)/$(RELEASE_PRG)/doc
@@ -245,6 +259,8 @@ release-floppy:
 	cp emutos*.st $(RELEASE_DIR)/$(RELEASE_FLOPPY)
 	cp desk/icon.def $(RELEASE_DIR)/$(RELEASE_FLOPPY)/emuicon.def
 	cp desk/icon.rsc $(RELEASE_DIR)/$(RELEASE_FLOPPY)/emuicon.rsc
+	cp desk/cicon.def $(RELEASE_DIR)/$(RELEASE_FLOPPY)/emucicn.def
+	cp desk/cicon.rsc $(RELEASE_DIR)/$(RELEASE_FLOPPY)/emucicn.rsc
 	cat doc/readme-floppy.txt readme.txt >$(RELEASE_DIR)/$(RELEASE_FLOPPY)/readme.txt
 	mkdir $(RELEASE_DIR)/$(RELEASE_FLOPPY)/doc
 	cp $(DOCFILES) $(RELEASE_DIR)/$(RELEASE_FLOPPY)/doc

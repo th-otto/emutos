@@ -320,7 +320,7 @@ void win_bldview(WNODE *pwin, WORD x, WORD y, WORD w, WORD h)
         OBJECT *obj;
         SCREENINFO *si;
         USERBLK *ub;
-        ICONBLK *ib;
+        DESKICONBLK *ib;
 
         /* calc offset */
         yoff = r_cnt * G.g_ihspc;
@@ -355,7 +355,6 @@ void win_bldview(WNODE *pwin, WORD x, WORD y, WORD w, WORD h)
             break;
         case V_ICON:
             ib = &si->icon.block;
-            obj->ob_type = G_ICON;
             win_icalc(pstart, pwin);
             anode = pstart->f_pa;
             if (anode)
@@ -369,11 +368,17 @@ void win_bldview(WNODE *pwin, WORD x, WORD y, WORD w, WORD h)
                     i_index = (pstart->f_isap) ? IG_APPL : IG_DOCU;
             }
             si->icon.index = i_index;
+#if CONF_WITH_COLORICONS
+            obj->ob_type = G.g_iblist[i_index].mainlist ? G_CICON : G_ICON;
+            obj->ob_spec.ciconblk = ib;
+#else
+            obj->ob_type = G_ICON;
             obj->ob_spec.iconblk = ib;
-            memcpy(ib, &G.g_iblist[i_index], sizeof(ICONBLK));
-            ib->ib_ptext = pstart->f_name;
+#endif
+            *ib = G.g_iblist[i_index];
+            ib->MONOBLK ib_ptext = pstart->f_name;
             if (anode)
-                ib->ib_char |= anode->a_letter;
+                ib->MONOBLK ib_char |= anode->a_letter;
             break;
         }
         pstart = pstart->f_next;

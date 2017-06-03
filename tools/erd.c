@@ -830,7 +830,7 @@ int n;
     mark_conditional();
 
 #ifdef ICON_RSC
-    generate_trees = generate_objects = 0;  /* the generated C file has neither */
+    generate_trees = 0;  /* the generated C file has neither */
 #endif
 
     /*
@@ -1482,6 +1482,19 @@ short old_tree = -1;
         fprintf(fp,"#define %-16s%d\n","RS_NBB",conditional_bitblk_start);
         fprintf(fp,"#endif\n\n\n");
     }
+#else
+    if (rsh.nobs == conditional_object_start) {
+        fprintf(fp,"#define %sRS_NOBS %d\n",prefix,rsh.nobs);
+        fprintf(fp,"#define %sRS_NIB  %d\n",prefix,rsh.nib);
+    } else {
+        fprintf(fp,"%s\n",other_cond.string);
+        fprintf(fp,"#define %sRS_NOBS %d\n",prefix,rsh.nobs);
+        fprintf(fp,"#define %sRS_NIB  %d\n",prefix,rsh.nib);
+        fprintf(fp,"#else\n");
+        fprintf(fp,"#define %sRS_NOBS %d\n",prefix,conditional_object_start);
+        fprintf(fp,"#define %sRS_NIB  %d\n",prefix,conditional_iconblk_start);
+        fprintf(fp,"#endif\n\n\n");
+    }
 #endif
 
 #ifdef GEM_RSC
@@ -1528,7 +1541,11 @@ PRIVATE int write_h_extern(FILE *fp)
     fprintf(fp,"extern void gem_rsc_fixit(void);\n\n");
 #endif
 #ifdef ICON_RSC
+    fprintf(fp,"#if CONF_WITH_COLORICONS\n");
+    fprintf(fp,"extern const OBJECT %srs_obj[];\n\n",prefix);
+    fprintf(fp,"#else\n");
     fprintf(fp,"extern const ICONBLK %srs_iconblk[];\n\n",prefix);
+    fprintf(fp,"#endif\n");
 #endif
 
     return ferror(fp) ? -1 : 0;
@@ -1546,6 +1563,9 @@ PRIVATE int write_include(FILE *fp,char *name)
 #ifdef GEM_RSC
     fprintf(fp,"#include \"../desk/deskmain.h\"\n");
     fprintf(fp,"#include \"gemrslib.h\"\n");
+#endif
+#ifdef ICON_RSC
+    fprintf(fp,"#include \"deskapp.h\"\n");
 #endif
     fprintf(fp,"#include \"%s.h\"\n",name);
     fprintf(fp,"#include \"nls.h\"\n\n");
@@ -1875,9 +1895,17 @@ short filebox = -1;
     if (!generate_objects)
         return 0;
 
+#ifdef ICON_RSC
+    fprintf(fp, "#if %sRS_NIB != BUILTIN_IBLKS\n", prefix);
+    fprintf(fp, "# error \"BUILTIN_IBLKS needs to be adjusted\"\n");
+    fprintf(fp, "#endif\n\n");
+    fprintf(fp,"#if CONF_WITH_COLORICONS\n");
+    fprintf(fp,"const OBJECT %srs_obj[%sRS_NOBS] = {\n",prefix,prefix);
+#else
     fprintf(fp,"OBJECT %srs_obj[RS_NOBS];\n\n",prefix);
 
     fprintf(fp,"static const OBJECT %srs_obj_rom[] = {\n",prefix);
+#endif
 
     /* trindex points to an array of long _offsets_ */
     trindex = (OFFSET *)(base + rsh.trindex);
@@ -2018,6 +2046,9 @@ short filebox = -1;
 
     fprintf(fp,"};\n\n\n");
 
+#ifdef ICON_RSC
+    fprintf(fp,"#endif\n");
+#endif
     return ferror(fp) ? -1 : 0;
 }
 

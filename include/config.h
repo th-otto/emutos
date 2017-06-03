@@ -300,6 +300,9 @@
 # ifndef CONF_WITH_MONSTER
 #  define CONF_WITH_MONSTER 0
 # endif
+# ifndef CONF_WITH_COLORICONS
+#  define CONF_WITH_COLORICONS 0
+# endif
 #endif
 
 /*
@@ -1329,6 +1332,7 @@
 #define BLKDEVNUM 26                    /* number of block devices supported: A: ... Z: */
 #define INF_FILE_NAME "A:\\EMUDESK.INF" /* path to saved desktop file */
 #define ICON_RSC_NAME "A:\\EMUICON.RSC" /* path to user icon file */
+#define CICN_RSC_NAME "A:\\EMUCICN.RSC" /* path to user color icon file */
 
 /*
  * Maximum lengths for pathname, filename, and filename components

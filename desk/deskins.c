@@ -55,7 +55,7 @@
 /*
  * used by insert_icon()
  */
-static ICONBLK ib;
+static DESKICONBLK ib;
 
 
 /*
@@ -520,9 +520,14 @@ static void insert_icon(OBJECT *tree, WORD obj, WORD nicon)
     OBJECT *objptr = tree + obj;
 
     ib = G.g_iblist[nicon];
-    ib.ib_ptext = "";
+    ib.MONOBLK ib_ptext = "";
+#if CONF_WITH_COLORICONS
+    objptr->ob_type = ib.mainlist ? G_CICON : G_ICON;
+    objptr->ob_spec.ciconblk = &ib;
+#else
     objptr->ob_type = G_ICON;
     objptr->ob_spec.iconblk = &ib;
+#endif
 }
 
 

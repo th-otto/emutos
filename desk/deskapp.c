@@ -344,6 +344,158 @@ static BYTE *app_parse(BYTE *pcurr, ANODE *pa)
 }
 
 
+#if CONF_WITH_COLORICONS
+
+/*
+ * set up ICONBLK stuff - all the hard work is done here
+ *
+ * returns -1 iff insufficient memory
+ */
+static WORD setup_iconblks(const OBJECT *tree, WORD count, WORD nobjs)
+{
+    void *allocmem;
+    WORD i, ih;
+    WORD n;
+
+    /*
+     * Allocate memory for:
+     *  ICONBLKs
+     *  pointers to untranslated masks
+     */
+    allocmem = dos_alloc_anyram(count*(sizeof(DESKICONBLK)+sizeof(UWORD *)));
+    if (!allocmem)
+    {
+        KDEBUG(("insufficient memory for %d desktop icons\n",count));
+        return -1;
+    }
+
+    G.g_iblist = allocmem;
+    allocmem += count * sizeof(DESKICONBLK);
+    G.g_origmask = allocmem;
+    allocmem += count * sizeof(UWORD *);
+
+    /* initialise the count of ICONBLKs */
+    G.g_numiblks = count;
+
+    /*
+     * Next, we copy the ICONBLKs to the g_iblist[] array:
+     *  g_iblist[] points to the transformed data/transformed mask
+     *  & is referenced by act_chkobj() in deskact.c, insa_icon()
+     *  in deskins.c, and win_bldview() in deskwin.c
+     */
+    for (i = 0, n = 0; i < nobjs && n < count; i++)
+    {
+        if (tree[i].ob_type == G_ICON)
+        {
+            G.g_iblist[n].monoblk = *(tree[i].ob_spec.iconblk);
+            G.g_iblist[n].mainlist = NULL;
+            n++;
+        } else if (tree[i].ob_type == G_CICON)
+        {
+            G.g_iblist[n] = *(tree[i].ob_spec.ciconblk);
+            n++;
+        }
+    }
+
+    /*
+     * Fix up the ICONBLKs
+     */
+    ih = G.g_iblist[0].monoblk.ib_ytext;
+    for (i = 0; i < count; i++)
+    {
+        G.g_iblist[i].monoblk.ib_char &= 0xff00;    /* strip any existing char */
+        G.g_iblist[i].monoblk.ib_ytext = ih;
+        G.g_iblist[i].monoblk.ib_wtext = 12 * gl_wschar;
+        G.g_iblist[i].monoblk.ib_htext = gl_hschar + 2;
+
+        /*
+         * Then we initialise g_origmask[]:
+         *  g_origmask[i] points to the untransformed mask & is
+         *  referenced by act_chkobj() in deskact.c
+         */
+        G.g_origmask[i] = (UWORD *)G.g_iblist[i].monoblk.ib_pmask;
+    }
+
+    return 0;
+}
+
+/*
+ * try to load icons from user-supplied resource
+ */
+static WORD load_user_icons(void)
+{
+    RSHDR *hdr;
+    OBJECT *tree;
+    WORD i;
+    WORD rc, w, h;
+    BYTE icon_rsc_name[max(sizeof(ICON_RSC_NAME), sizeof(CICN_RSC_NAME))];
+    WORD num_icons;
+
+    /* Do not load user icons if Control was held on startup */
+    if (bootflags & BOOTFLAG_SKIP_AUTO_ACC)
+        return -1;
+
+    strcpy(icon_rsc_name, CICN_RSC_NAME);
+    icon_rsc_name[0] += G.g_stdrv;  /* Adjust drive letter  */
+    if (!rsrc_load(icon_rsc_name))
+    {
+        strcpy(icon_rsc_name, ICON_RSC_NAME);
+        icon_rsc_name[0] += G.g_stdrv;  /* Adjust drive letter  */
+        if (!rsrc_load(icon_rsc_name))
+        {
+            KDEBUG(("can't load user desktop icons from %s\n",icon_rsc_name));
+            return -1;
+        }
+    }
+
+    /*
+     * determine the number of icons in the user's icon resource
+     */
+    hdr = (RSHDR *)(AP_1RESV);
+    tree = (OBJECT *)((char *)hdr + hdr->rsh_object);
+    num_icons = 0;
+    w = h = 0;
+    for (i = 0; i < hdr->rsh_nobs; i++)
+        if (tree[i].ob_type == G_ICON || tree[i].ob_type == G_CICON)
+        {
+            w = tree[i].ob_spec.iconblk->ib_wicon;
+            h = tree[i].ob_spec.iconblk->ib_hicon;
+            num_icons++;
+        }
+    if (num_icons < BUILTIN_IBLKS)   /* must have at least the minimum set */
+    {
+        KDEBUG(("too few user desktop icons (%d)\n",num_icons));
+        rsrc_free();
+        return -1;
+    }
+    /*
+     * clamp count.
+     * this is done mainly because the icon number is written as a 2-digit
+     * hex number to the emudesk.inf file.
+     */
+    num_icons = min(num_icons, MAX_ICONS);
+
+    /* get pointer to start of ICONBLKs in the resource
+     * and validate their size
+     */
+    if ((w != icon_rs_obj[1].ob_spec.iconblk->ib_wicon) ||
+        (h != icon_rs_obj[1].ob_spec.iconblk->ib_hicon))
+    {
+        KDEBUG(("wrong size user desktop icons (%dx%d)\n",w,h));
+        rsrc_free();
+        return -1;
+    }
+
+    rc = setup_iconblks(tree, num_icons, hdr->rsh_nobs);
+
+    if (rc < 0)
+        rsrc_free();
+
+    return rc;
+}
+
+#else
+
 /*
  * set up ICONBLK stuff - all the hard work is done here
  *
@@ -485,6 +637,8 @@ static WORD load_user_icons(void)
     return rc;
 }
 
+#endif /* CONF_WITH_COLORICONS */
+
 
 /*
  *  Initialise everything related to ANODEs
@@ -548,7 +702,11 @@ static WORD app_rdicon(void)
      * try to load user icons; if that fails, use builtin
      */
     if (load_user_icons() < 0)
+#if CONF_WITH_COLORICONS
+        return setup_iconblks(icon_rs_obj, BUILTIN_IBLKS, icon_RS_NOBS);
+#else
         return setup_iconblks(icon_rs_iconblk, BUILTIN_IBLKS);
+#endif
 
     return 0;
 }
@@ -607,8 +765,8 @@ void app_start(void)
         nomem_alert();          /* infinite loop */
     }
 
-    G.g_wicon = (12 * gl_wschar) + (2 * G.g_iblist[0].ib_xtext);
-    G.g_hicon = G.g_iblist[0].ib_hicon + gl_hschar + 2;
+    G.g_wicon = (12 * gl_wschar) + (2 * G.g_iblist[0].MONOBLK ib_xtext);
+    G.g_hicon = G.g_iblist[0].MONOBLK ib_hicon + gl_hschar + 2;
 
     xcnt = G.g_wdesk / (G.g_wicon+MIN_WINT);/* icon count */
     G.g_icw = G.g_wdesk / xcnt;             /* width */
@@ -803,7 +961,7 @@ void app_start(void)
     /* set up outlines for dragging files displayed as icons */
     G.g_nmicon = 9;     /* number of points */
     memset(G.g_xyicon, 0, sizeof(G.g_xyicon));
-    xcent = (G.g_wicon - G.g_iblist[0].ib_wicon) / 2;
+    xcent = (G.g_wicon - G.g_iblist[0].MONOBLK ib_wicon) / 2;
     G.g_xyicon[0] = xcent;
     G.g_xyicon[2] = xcent;
     G.g_xyicon[3] = G.g_hicon-gl_hschar-2;
@@ -1081,7 +1239,7 @@ void app_blddesk(void)
     ANODE *pa;
     OBJECT *pob;
     SCREENINFO *si;
-    ICONBLK *pic;
+    DESKICONBLK *pic;
 
     /* free all this window's kids and set size  */
     obj_wfree(DROOT, 0, 0, gl_width, gl_height);
@@ -1117,15 +1275,20 @@ void app_blddesk(void)
             pob = &G.g_screen[obid];
             pob->ob_state = NORMAL;
             pob->ob_flags = NONE;
-            pob->ob_type = G_ICON;
             si = &G.g_screeninfo[obid];
             si->icon.index = icon;
             pic = &si->icon.block;
+            *pic = G.g_iblist[icon];
+#if CONF_WITH_COLORICONS
+            pob->ob_type = pic->mainlist ? G_CICON : G_ICON;
+            pob->ob_spec.ciconblk = pic;
+#else
+            pob->ob_type = G_ICON;
             pob->ob_spec.iconblk = pic;
-            memcpy(pic, &G.g_iblist[icon], sizeof(ICONBLK));
-            pic->ib_xicon = ((G.g_wicon - pic->ib_wicon) / 2);
-            pic->ib_ptext = pa->a_pappl;
-            pic->ib_char |= pa->a_letter;
+#endif
+            pic->MONOBLK ib_xicon = ((G.g_wicon - pic->MONOBLK ib_wicon) / 2);
+            pic->MONOBLK ib_ptext = pa->a_pappl;
+            pic->MONOBLK ib_char |= pa->a_letter;
         }
     }
     do_wredraw(0, G.g_xdesk, G.g_ydesk, G.g_wdesk, G.g_hdesk);
