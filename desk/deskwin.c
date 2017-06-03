@@ -25,12 +25,14 @@
 #include "obdefs.h"
 #include "rectfunc.h"
 #include "gsxdefs.h"
+
+#include "deskbind.h"
+#include "deskglob.h"
 #include "deskapp.h"
 #include "deskfpd.h"
 #include "deskwin.h"
 #include "dos.h"
 #include "gembind.h"
-#include "deskbind.h"
 #include "intmath.h"
 #include "aesbind.h"
 #include "deskobj.h"
@@ -38,7 +40,6 @@
 #include "deskfun.h"
 #include "deskrsrc.h"
 #include "deskmain.h"
-#include "deskglob.h"
 #include "deskinf.h"
 #include "kprint.h"
 
@@ -349,7 +350,7 @@ void win_bldview(WNODE *pwin, WORD x, WORD y, WORD w, WORD h)
             obj->ob_type = G_USERDEF;
             obj->ob_spec = (LONG)ub;
             ub->ub_code = dr_code;
-            ub->ub_parm = (LONG)&pstart->f_junk;
+            ub->ub_parm = (LONG)pstart;
             win_icalc(pstart, pwin);
             break;
         case V_ICON:

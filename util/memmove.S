@@ -78,8 +78,8 @@ _memcpy:
 #endif
         move.l   a0,d1
         cmpi.l   #BREAKEVEN,d0   // is it worth doing the complicated version?
-        bge      memmove         // yes, branch
-        bra      sdecr
+        jge      memmove         // yes, branch
+        jra      sdecr
 sloop:
         move.b   (a1)+,(a0)+
 sdecr:
@@ -104,8 +104,8 @@ memmove:
 #endif
         move.l   d0,d2
         cmp.l    a0,a1
-        bgt      memcopy         // if src > dst, copy will do fine.
-        beq      end             // if src == dst, nothing to do.
+        jgt      memcopy         // if src > dst, copy will do fine.
+        jeq      end             // if src == dst, nothing to do.
 // now, src < dst.
         move.l   a1,d0
         move.l   a0,d1
@@ -115,21 +115,21 @@ memmove:
         eor.b    d1,d0
 #endif
         btst     #0,d0           // pointers mutually aligned?
-        bne      back1
+        jne      back1
         move.l   d2,d0
-        beq      end             // if size == 0, nothing to do
+        jeq      end             // if size == 0, nothing to do
         add.l    d0,a1
         add.l    d0,a0
         move.l   a1,d1
         btst     #0,d1
-        beq      bcheck64
+        jeq      bcheck64
         move.b   -(a1),-(a0)
         sub.l    #1,d0
-        beq      end
+        jeq      end
 bcheck64:
         move.l   #63,d1                // +
         cmp.l    d1,d0                 // +
-        ble      back4                 // + count < 64
+        jle      back4                 // + count < 64
 #ifdef __mcoldfire__
         lea      -44(sp),sp
         movem.l  d2-d7/a2-a6,(sp)      // save regs for movem use
@@ -138,7 +138,7 @@ bcheck64:
 #endif
         move.b   d0,d1                 // count mod 256
         lsr.l    #8,d0                 // count div 256
-        bra      bend256
+        jra      bend256
 bloop256:
         lea      -256(a1),a1
         lea      -256(a0),a0
@@ -173,12 +173,12 @@ bloop256:
 bend256:
 #ifdef __mcoldfire__
         subq.l   #1,d0
-        bpl.s    bloop256              // decrement count, test and loop
+        jpl      bloop256              // decrement count, test and loop
 #else
         dbra     d0,bloop256           // decrement count, test and loop
 #endif
         move.l   d1,d0                 // remainder becomes new count
-        beq      done                  // more to copy? no!
+        jeq      done                  // more to copy? no!
 #ifdef __mcoldfire__
         and.l    #0x3F,d1              // + count mod 64
         lsr.l    #6,d0                 // + count div 64
@@ -186,7 +186,7 @@ bend256:
         and.b    #0x3F,d1              // + count mod 64
         lsr.b    #6,d0                 // + count div 64
 #endif
-        bra      bend64
+        jra      bend64
 bloop64:
         lea      -64(a1),a1
         lea      -64(a0),a0
@@ -205,7 +205,7 @@ bloop64:
 bend64:
 #ifdef __mcoldfire__
         subq.l   #1,d0
-        bpl.s    bloop64               // decrement count, test and loop
+        jpl      bloop64               // decrement count, test and loop
         movem.l  (a7),d2-d7/a2-a6      // restore regs for movem use
         lea      44(a7),a7
 #else
@@ -222,24 +222,24 @@ back4:
         and.b    #3,d1                 // +
         lsr.b    #2,d0                 // +
 #endif
-        bra      bend4
+        jra      bend4
 bloop4:
         move.l   -(a1),-(a0)
 bend4:
 #ifdef __mcoldfire__
         subq.l   #1,d0
-        bpl.s    bloop4                 // decrement count, test and loop
+        jpl      bloop4                 // decrement count, test and loop
 #else
         dbra     d0,bloop4              // decrement count, test and loop
 #endif
         move.l   d1,d0                  // remainder becomes new count
-        bra      bend1
+        jra      bend1
 bloop1:
         move.b   -(a1),-(a0)
 bend1:
 #ifdef __mcoldfire__
         subq.l   #1,d0
-        bpl.s    bloop1                 // decrement count, test and loop
+        jpl      bloop1                 // decrement count, test and loop
 #else
         dbra     d0,bloop1              // decrement count, test and loop
 #endif
@@ -255,13 +255,13 @@ end:
 // backwards, when pointers are not aligned.
 back1:
         move.l   d2,d0           // size
-        beq      end             // if size == 0, nothing to do
+        jeq      end             // if size == 0, nothing to do
 // backwards, but 16 bytes by 16 bytes forward.
         add.l    d0,a1
         add.l    d0,a0
         move.l   #16,d1
         cmp.l    d1,d0
-        blt      bend1
+        jlt      bend1
 back16:
         move.b   d0,d1
 #ifdef __mcoldfire__
@@ -270,7 +270,7 @@ back16:
         and.b    #0x0F,d1
 #endif
         lsr.l    #4,d0
-        bra      bend16
+        jra      bend16
 bloop16:
         lea      -16(a1),a1
         lea      -16(a0),a0
@@ -295,14 +295,14 @@ bloop16:
 bend16:
 #ifdef __mcoldfire__
         subq.l   #1,d0
-        bpl.s    bloop16
+        jpl      bloop16
 #else
         dbra     d0,bloop16
         sub.l    #0x10000,d0           // count can even be bigger (>1MB)
-        bhi      bloop16               // (dbra handles only word counters)
+        jhi      bloop16               // (dbra handles only word counters)
 #endif
         move.l   d1,d0
-        bra      bend1
+        jra      bend1
 
 memcopy:
         move.l   a1,d0
@@ -313,17 +313,17 @@ memcopy:
         eor.b    d1,d0
 #endif
         btst     #0,d0                 // pointers mutually aligned?
-        bne      copy1                 // +
+        jne      copy1                 // +
         move.l   d2,d0
-        beq      end                   // if cnt == 0 && pointers both odd ...
+        jeq      end                   // if cnt == 0 && pointers both odd ...
         btst     #0,d1                 // pointers aligned, but odd?
-        beq      check64               // no
+        jeq      check64               // no
         move.b   (a1)+,(a0)+           // copy odd byte
         sub.l    #1,d0                 // decrement count
 check64:
         move.l   #63,d1                // +
         cmp.l    d1,d0                 // +
-        ble      copy4                 // + count < 64
+        jle      copy4                 // + count < 64
 #ifdef __mcoldfire__
         lea      -44(a7),a7
         movem.l  d2-d7/a2-a6,(a7)      // save regs for movem use
@@ -332,7 +332,7 @@ check64:
 #endif
         move.b   d0,d1                 // count mod 256
         lsr.l    #8,d0                 // count div 256
-        bra      end256
+        jra      end256
 loop256:
 #ifdef __mcoldfire__
         movem.l  (a1),d2-d7/a2-a6      // copy 11x4 bytes
@@ -366,12 +366,12 @@ loop256:
 end256:
 #ifdef __mcoldfire__
         subq.l   #1,d0
-        bpl.s    loop256               // decrement count, test and loop
+        jpl      loop256               // decrement count, test and loop
 #else
         dbra     d0,loop256            // decrement count, test and loop
 #endif
         move.l   d1,d0                 // remainder becomes new count
-        beq      done                  // more to copy? no!
+        jeq      done                  // more to copy? no!
 #ifdef __mcoldfire__
         and.l    #0x3F,d1              // + count mod 64
         lsr.l    #6,d0                 // + count div 64
@@ -379,7 +379,7 @@ end256:
         and.b    #0x3F,d1              // + count mod 64
         lsr.b    #6,d0                 // + count div 64
 #endif
-        bra      end64
+        jra      end64
 done:
 #ifdef __mcoldfire__
         movem.l  (a7),d2-d7/a2-a6      // restore regs for movem use
@@ -387,7 +387,7 @@ done:
 #else
         movem.l  (a7)+,d2-d7/a2-a6     // restore regs for movem use
 #endif
-        bra end
+        jra      end
 
 loop64:
 #ifdef __mcoldfire__
@@ -406,7 +406,7 @@ loop64:
 end64:
 #ifdef __mcoldfire__
         subq.l   #1,d0
-        bpl.s    loop64                // decrement count, test and loop
+        jpl      loop64                // decrement count, test and loop
         movem.l  (a7),d2-d7/a2-a6      // restore regs for movem use
         lea      44(a7),a7
 #else
@@ -423,24 +423,24 @@ copy4:
         and.b    #3,d1                 // +
         lsr.b    #2,d0                 // +
 #endif
-        bra      end4
+        jra      end4
 loop4:
         move.l   (a1)+,(a0)+
 end4:
 #ifdef __mcoldfire__
         subq.l   #1,d0
-        bpl.s    loop4                 // decrement count, test and loop
+        jpl      loop4                 // decrement count, test and loop
 #else
         dbra     d0,loop4              // decrement count, test and loop
 #endif
         move.l   d1,d0                 // remainder becomes new count
-        bra      end1
+        jra      end1
 loop1:
         move.b   (a1)+,(a0)+
 end1:
 #ifdef __mcoldfire__
         subq.l   #1,d0
-        bpl.s    loop1                 // decrement count, test and loop
+        jpl      loop1                 // decrement count, test and loop
 #else
         dbra     d0,loop1              // decrement count, test and loop
 #endif
@@ -457,7 +457,7 @@ copy1:
                                        // count can be big; test on it !
         move.l   #16,d1                // == moveq; 4
         cmp.l    d1,d0                 // 6
-        blt      end1
+        jlt      end1
 copy16:
         move.b   d0,d1
 #ifdef __mcoldfire__
@@ -466,7 +466,7 @@ copy16:
         and.b    #0x0F,d1
 #endif
         lsr.l    #4,d0
-        bra      end16
+        jra      end16
 loop16:
         move.b   (a1)+,(a0)+
         move.b   (a1)+,(a0)+
@@ -487,11 +487,11 @@ loop16:
 end16:
 #ifdef __mcoldfire__
         subq.l   #1,d0
-        bpl.s    loop16
+        jpl      loop16
 #else
         dbra     d0,loop16
         sub.l    #0x10000,d0           // count can even be bigger (>1MB)
-        bhi      loop16                // (dbra handles only word counters)
+        jhi      loop16                // (dbra handles only word counters)
 #endif
         move.l   d1,d0
-        bra      end1
+        jra      end1

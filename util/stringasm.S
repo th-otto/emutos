@@ -33,7 +33,7 @@ lstcpy_loop:
         addq.w  #1,d0
 #endif
         move.b  (a1)+,(a0)+
-        bne.s   lstcpy_loop
+        jne     lstcpy_loop
 #ifdef __mcoldfire__
         subq.l  #1,d0
 #else
@@ -54,9 +54,9 @@ _strchr:
 #endif
 strchr_loop:
         move.b  (a0)+,d1
-        beq.s   strchr_null
+        jeq     strchr_null
         cmp.b   d1,d0
-        bne.s   strchr_loop
+        jne     strchr_loop
         subq.l  #1,a0
         move.l  a0,d0
         rts

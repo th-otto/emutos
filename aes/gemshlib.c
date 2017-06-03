@@ -234,7 +234,7 @@ static void sh_draw(const BYTE *lcmd, WORD start, WORD depth)
         gsx_sclip(&gl_rscreen);
         ted = (TEDINFO *)tree[DTNAME].ob_spec;
         ted->te_ptext = (BYTE *)lcmd;   /* text string displayed in menu bar */
-        ob_draw((LONG)tree, start, depth);
+        ob_draw(tree, start, depth);
     }
 }
 
@@ -528,7 +528,7 @@ void aes_run_rom_program(PRG_ENTRY entry)
 
     /* Create a basepage with the standard Pexec() */
     pd = (PD *) trap1_pexec(PE_BASEPAGEFLAGS, (char*)PF_STANDARD, "", NULL);
-    pd->p_tbase = (LONG) entry;
+    pd->p_tbase = (BYTE *) entry;
 
     /* Run the program with dos_exec() for AES reentrancy issues */
     dos_exec(PE_GOTHENFREE, NULL, (const BYTE *)pd, NULL);
@@ -593,7 +593,7 @@ static WORD sh_ldapp(SHELL *psh)
             KDEBUG(("sh_ldapp: appl_init() without appl_exit()\n"));
             mn_clsda();
             if (rlr->p_qindex)
-                ap_rdwr(MU_MESAG, rlr, rlr->p_qindex, (LONG)D.g_valstr);
+                ap_rdwr(MU_MESAG, rlr, rlr->p_qindex, (WORD *)D.g_valstr);
             rlr->p_flags &= ~AP_OPEN;
         }
 
@@ -671,14 +671,11 @@ void sh_main(BOOL isgem)
         }
 
         sh_draw(D.s_cmd, 0, 0);         /* redraw the desktop   */
-        desk_tree[rlr->p_pid] = 0x0L;   /* clear his desk field */
 
         if (rc)                         /* display alert for most recent error */
             fm_show(rc, NULL, 1);
 
         rc = sh_ldapp(psh);             /* run the desktop/console/app */
-
-        desk_tree[rlr->p_pid] = 0x0L;   /* clear his desk field */
 
     } while(psh->sh_doexec && !gl_changerez);
 

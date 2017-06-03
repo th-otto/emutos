@@ -54,7 +54,7 @@ WORD     ml_ocnt;    /* Needs to be 0 initially! */
 
 
 /* Local variables: */
-static LONG     ml_mnhold;
+static OBJECT   *ml_mnhold;
 static GRECT    ml_ctrl;
 static AESPD    *ml_pmown;
 static BYTE     alert_str[256]; /* must be long enough for longest alert in gem.rsc */
@@ -84,11 +84,11 @@ void fm_own(WORD beg_ownit)
 {
     if (beg_ownit)
     {
-        wm_update(TRUE);
+        wm_update(BEG_UPDATE);
         if (ml_ocnt == 0)
         {
             ml_mnhold = gl_mntree;
-            gl_mntree = 0x0L;
+            gl_mntree = NULL;
             get_ctrl(&ml_ctrl);
             get_mown(&ml_pmown);
             ct_chgown(rlr, &gl_rscreen);
@@ -103,7 +103,7 @@ void fm_own(WORD beg_ownit)
             ct_chgown(ml_pmown, &ml_ctrl);
             gl_mntree = ml_mnhold;
         }
-        wm_update(FALSE);
+        wm_update(END_UPDATE);
     }
 }
 
@@ -112,7 +112,7 @@ void fm_own(WORD beg_ownit)
  *  Routine to find the next editable text field, or a field that
  *  is marked as a default return field.
  */
-static WORD find_obj(LONG tree, WORD start_obj, WORD which)
+static WORD find_obj(OBJECT *tree, WORD start_obj, WORD which)
 {
     WORD obj, flag, state, inc;
     WORD            theflag;
@@ -151,7 +151,7 @@ static WORD find_obj(LONG tree, WORD start_obj, WORD which)
 }
 
 
-static WORD fm_inifld(LONG tree, WORD start_fld)
+static WORD fm_inifld(OBJECT *tree, WORD start_fld)
 {
     /* position cursor on the starting field */
     if (start_fld == 0)
@@ -161,7 +161,7 @@ static WORD fm_inifld(LONG tree, WORD start_fld)
 }
 
 
-WORD fm_keybd(LONG tree, WORD obj, WORD *pchar, WORD *pnew_obj)
+WORD fm_keybd(OBJECT *tree, WORD obj, WORD *pchar, WORD *pnew_obj)
 {
     WORD    direction;
 
@@ -189,7 +189,7 @@ WORD fm_keybd(LONG tree, WORD obj, WORD *pchar, WORD *pnew_obj)
         *pnew_obj = find_obj(tree, obj, direction);
         if ((direction == DEFLT) && (*pnew_obj != 0))
         {
-            OBJECT *objptr = ((OBJECT *)tree) + *pnew_obj;
+            OBJECT *objptr = tree + *pnew_obj;
             ob_change(tree, *pnew_obj, objptr->ob_state | SELECTED, TRUE);
             return FALSE;
         }
@@ -199,7 +199,7 @@ WORD fm_keybd(LONG tree, WORD obj, WORD *pchar, WORD *pnew_obj)
 }
 
 
-WORD fm_button(LONG tree, WORD new_obj, WORD clks, WORD *pnew_obj)
+WORD fm_button(OBJECT *tree, WORD new_obj, WORD clks, WORD *pnew_obj)
 {
     WORD    tobj;
     WORD    orword;
@@ -229,7 +229,7 @@ WORD fm_button(LONG tree, WORD new_obj, WORD clks, WORD *pnew_obj)
         {
             /* check siblings to find and turn off the old RBUTTON */
             parent = get_par(tree, new_obj, &junk);
-            objptr = ((OBJECT *)tree) + parent;
+            objptr = tree + parent;
             tobj = objptr->ob_head;
             while (tobj != parent)
             {
@@ -243,7 +243,7 @@ WORD fm_button(LONG tree, WORD new_obj, WORD clks, WORD *pnew_obj)
                         tstate &= ~SELECTED;
                     ob_change(tree, tobj, tstate, TRUE);
                 }
-                objptr = ((OBJECT *)tree) + tobj;
+                objptr = tree + tobj;
                 tobj = objptr->ob_next;
             }
         }
@@ -277,7 +277,7 @@ WORD fm_button(LONG tree, WORD new_obj, WORD clks, WORD *pnew_obj)
  *  form.  The cursor is placed at the starting field.  This routine
  *  returns the object that caused the exit to occur
  */
-WORD fm_do(LONG tree, WORD start_fld)
+WORD fm_do(OBJECT *tree, WORD start_fld)
 {
     WORD    edit_obj;
     WORD    next_obj;
@@ -311,7 +311,7 @@ WORD fm_do(LONG tree, WORD start_fld)
         }
         /* wait for mouse or key */
         which = ev_multi(MU_KEYBD | MU_BUTTON, NULL, NULL,
-                         0x0L, 0x0002ff01L, 0x0L, rets);
+                         0x0L, 0x0002ff01L, NULL, rets);
 
         /* handle keyboard event */
         if (which & MU_KEYBD)
@@ -354,7 +354,7 @@ WORD fm_do(LONG tree, WORD start_fld)
  *  Form DIALogue routine to handle visual effects of drawing and
  *  undrawing a dialogue
  */
-WORD fm_dial(WORD fmd_type, GRECT *pt)
+WORD fm_dial(WORD fmd_type, GRECT *pi, GRECT *pt)
 {
     /* adjust tree position */
     gsx_sclip(&gl_rscreen);
@@ -362,6 +362,12 @@ WORD fm_dial(WORD fmd_type, GRECT *pt)
     {
     case FMD_START:
         /* grab screen sync or some other mutual exclusion method */
+        break;
+    case FMD_GROW:
+        gr_growbox(pi, pt);
+        break;
+    case FMD_SHRINK:
+        gr_shrinkbox(pi, pt);
         break;
     case FMD_FINISH:
         /* update certain portion of the screen */
@@ -388,7 +394,7 @@ WORD fm_show(WORD string, WORD *pwd, WORD level)
         ad_alert = alert_str;
     }
 
-    return fm_alert(level, (LONG)ad_alert);
+    return fm_alert(level, ad_alert);
 }
 
 

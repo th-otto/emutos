@@ -139,28 +139,29 @@ static void *get_addr(UWORD rstype, UWORD rsindex)
     OBJECT *obj;
     TEDINFO *tedinfo;
     ICONBLK *iconblk;
+    RSHDR *hdr = rs_hdr;
 
     switch(rstype)
     {
     case R_TREE:
         return rs_global->ap_ptree[rsindex];
     case R_OBJECT:
-        offset = rs_hdr->rsh_object;
+        offset = hdr->rsh_object;
         size = sizeof(OBJECT);
         break;
     case R_TEDINFO:
     case R_TEPTEXT: /* same, because te_ptext is first field of TEDINFO */
-        offset = rs_hdr->rsh_tedinfo;
+        offset = hdr->rsh_tedinfo;
         size = sizeof(TEDINFO);
         break;
     case R_ICONBLK:
     case R_IBPMASK: /* same, because ib_pmask is first field of ICONBLK */
-        offset = rs_hdr->rsh_iconblk;
+        offset = hdr->rsh_iconblk;
         size = sizeof(ICONBLK);
         break;
     case R_BITBLK:
     case R_BIPDATA: /* same, because bi_pdata is first field of BITBLK */
-        offset = rs_hdr->rsh_bitblk;
+        offset = hdr->rsh_bitblk;
         size = sizeof(BITBLK);
         break;
     case R_OBSPEC:
@@ -179,15 +180,15 @@ static void *get_addr(UWORD rstype, UWORD rsindex)
             return &iconblk->ib_pdata;
         return &iconblk->ib_ptext;
     case R_STRING:
-        return *((void **)get_sub(rsindex, rs_hdr->rsh_frstr, sizeof(LONG)));
+        return *((void **)get_sub(rsindex, hdr->rsh_frstr, sizeof(LONG)));
     case R_IMAGEDATA:
-        return *((void **)get_sub(rsindex, rs_hdr->rsh_frimg, sizeof(LONG)));
+        return *((void **)get_sub(rsindex, hdr->rsh_frimg, sizeof(LONG)));
     case R_FRSTR:
-        offset = rs_hdr->rsh_frstr;
+        offset = hdr->rsh_frstr;
         size = sizeof(LONG);
         break;
     case R_FRIMG:
-        offset = rs_hdr->rsh_frimg;
+        offset = hdr->rsh_frimg;
         size = sizeof(LONG);
         break;
     default:
@@ -294,7 +295,7 @@ WORD rs_free(AESGLOBAL *pglobal)
 {
     rs_global = pglobal;
 
-    return !dos_free((LONG)rs_global->ap_rscmem);
+    return !dos_free(rs_global->ap_rscmem);
 }
 
 
@@ -302,12 +303,12 @@ WORD rs_free(AESGLOBAL *pglobal)
  *  Get a particular ADDRess out of a resource file that has been
  *  loaded into memory
  */
-WORD rs_gaddr(AESGLOBAL *pglobal, UWORD rtype, UWORD rindex, LONG *rsaddr)
+WORD rs_gaddr(AESGLOBAL *pglobal, UWORD rtype, UWORD rindex, void **rsaddr)
 {
     rs_sglobe(pglobal);
 
-    *rsaddr = (LONG)get_addr(rtype, rindex);
-    return (*rsaddr != -1L);
+    *rsaddr = get_addr(rtype, rindex);
+    return (*rsaddr != (void *)-1L);
 }
 
 
@@ -315,14 +316,14 @@ WORD rs_gaddr(AESGLOBAL *pglobal, UWORD rtype, UWORD rindex, LONG *rsaddr)
  *  Set a particular ADDRess in a resource file that has been
  *  loaded into memory
  */
-WORD rs_saddr(AESGLOBAL *pglobal, UWORD rtype, UWORD rindex, LONG rsaddr)
+WORD rs_saddr(AESGLOBAL *pglobal, UWORD rtype, UWORD rindex, void *rsaddr)
 {
-    LONG *psubstruct;
+    void **psubstruct;
 
     rs_sglobe(pglobal);
 
-    psubstruct = (LONG *)get_addr(rtype, rindex);
-    if (psubstruct != (LONG *)-1L)
+    psubstruct = (void **)get_addr(rtype, rindex);
+    if (psubstruct != (void **)-1L)
     {
         *psubstruct = rsaddr;
         return TRUE;
@@ -398,7 +399,7 @@ void rs_fixit(AESGLOBAL *pglobal)
 /*
  *  rs_load: the rsrc_load() implementation
  */
-WORD rs_load(AESGLOBAL *pglobal, LONG rsfname)
+WORD rs_load(AESGLOBAL *pglobal, BYTE *rsfname)
 {
     LONG  dosrc;
     WORD  ret;
@@ -407,7 +408,7 @@ WORD rs_load(AESGLOBAL *pglobal, LONG rsfname)
     /*
      * use shel_find() to get resource location
      */
-    strcpy(tmprsfname,(char *)rsfname);
+    strcpy(tmprsfname,rsfname);
     if (!sh_find(tmprsfname))
         return FALSE;
 

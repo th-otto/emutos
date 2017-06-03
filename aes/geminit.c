@@ -74,7 +74,7 @@ extern void __CDECL gem_main(void); /* called only from gemstart.S */
 #define INF_SIZE   300                  /* size of buffer used by sh_rdinf() */
                                         /*  for start of EMUDESK.INF file    */
 
-#define WAIT_TIMEOUT 50                 /* see wait_for_accs() */
+#define WAIT_TIMEOUT 500                /* see wait_for_accs() */
 
 static BYTE     infbuf[INF_SIZE+1];     /* used to read part of EMUDESK.INF */
 static BYTE     acc_name[NUM_ACCS][LEN_ZFNAME]; /* used by count_accs()/ldaccs() */
@@ -420,8 +420,8 @@ void all_run(void)
         dsptch();
     }
     /* then get in the wait line */
-    wm_update(TRUE);
-    wm_update(FALSE);
+    wm_update(BEG_UPDATE);
+    wm_update(END_UPDATE);
 }
 
 
@@ -463,7 +463,7 @@ void wait_for_accs(WORD bitmask)
     /*
      * as a precaution against infinite loops, we set a count timeout.
      * in limited testing, the maximum number of loops actually used
-     * was less than 10.
+     * was less than 100.
      */
     for (n = 0; n < WAIT_TIMEOUT; n++)
     {
@@ -690,5 +690,5 @@ void __CDECL gem_main(void)
     enable_interrupts();
 
     if (D.g_acc)
-        dos_free((LONG)D.g_acc);
+        dos_free(D.g_acc);
 }

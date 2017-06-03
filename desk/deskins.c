@@ -33,14 +33,13 @@
 #include "dos.h"
 #include "optimize.h"
 
+#include "deskbind.h"
+#include "deskglob.h"
 #include "deskapp.h"
 #include "deskfpd.h"
 #include "deskwin.h"
 #include "gembind.h"
-#include "deskbind.h"
-
 #include "aesbind.h"
-#include "deskglob.h"
 #include "deskinf.h"
 #include "deskfun.h"
 #include "deskrsrc.h"
@@ -986,9 +985,7 @@ WORD ins_icon(WORD sobj)
     {
         for (pf = pw->w_path->p_flist; pf; pf = pf->f_next)
         {
-            if (pf->f_obid == NIL)
-                continue;
-            if (!(G.g_screen[pf->f_obid].ob_state & SELECTED))
+            if (!fnode_is_selected(pf))
                 continue;
             rc = install_window_icon(pf);
             if (rc > 0)

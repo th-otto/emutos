@@ -396,7 +396,7 @@ static void offree(DMD *d)
 /*
  *  osif -
  */
-long __CDECL osif(int *pw)
+long __CDECL osif(short *pw)
 {
     char **pb, *pb2, *p, ctmp;
     BPB *b;

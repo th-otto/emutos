@@ -12,9 +12,8 @@
 
 #define DESKWH  0       /* window handle for desktop */
 
-extern LONG     desk_tree[];
 extern WORD     gl_wtop;
-extern LONG     gl_awind;
+extern OBJECT   *gl_awind;
 
 void w_nilit(WORD num, OBJECT olist[]);
 void w_getsize(WORD which, WORD w_handle, GRECT *pt);
@@ -24,7 +23,7 @@ void w_bldactive(WORD w_handle);
 
 void ap_sendmsg(WORD ap_msg[], WORD type, AESPD *towhom,
                 WORD w3, WORD w4, WORD w5, WORD w6, WORD w7);
-void w_update(WORD bottom, GRECT *pt, WORD top, WORD moved, WORD usetrue);
+void w_update(WORD bottom, GRECT *pt, WORD top, BOOL moved, BOOL usetrue);
 
 void wm_start(void);
 

@@ -122,13 +122,12 @@ static void hctl_window(WORD w_handle, WORD mx, WORD my)
     WORD    wm, hm;
     WORD    kind;
     WORD    cpt, message;
-    LONG    tree;
+    OBJECT  *tree;
 
     message = 0;
     x = y = w = h = 0;
 
-    if ( (w_handle == gl_wtop) ||
-       ( (pwin->w_flags & VF_SUBWIN) && (D.w_win[gl_wtop].w_flags & VF_SUBWIN) )  )
+    if (w_handle == gl_wtop)
     {
         /*
          * went down on active window so handle control points
@@ -236,7 +235,7 @@ static void hctl_rect(void)
     WORD    mesag;
     AESPD   *owner;
 
-    if ( gl_mntree != 0x0L )
+    if ( gl_mntree )
     {
         mesag = 0;
         if ( mn_do(&title, &item) )
@@ -285,7 +284,7 @@ void ct_mouse(WORD grabit)
 {
     if (grabit)
     {
-        wm_update(TRUE);
+        wm_update(BEG_UPDATE);
         gl_ctmown = TRUE;
         gl_mowner = rlr;
         set_mouse_to_arrow();
@@ -300,7 +299,7 @@ void ct_mouse(WORD grabit)
         gl_moff = gl_tmpmoff;
         gsx_mfset(&gl_mouse);
         gl_ctmown = FALSE;
-        wm_update(FALSE);
+        wm_update(END_UPDATE);
     }
 }
 
@@ -343,10 +342,10 @@ void __CDECL ctlmgr(void)
         else
         {
             ev_which = MU_KEYBD | MU_BUTTON;
-            if ( gl_mntree != 0x0L )    /* only wait on bar when there  */
+            if ( gl_mntree )            /* only wait on bar when there  */
                 ev_which |= MU_M1;      /* is a menu                    */
             ev_which = ev_multi(ev_which, &gl_ctwait, &gl_ctwait,
-                                0x0L, 0x0001ff01L, 0x0L, rets);
+                                0x0L, 0x0001ff01L, NULL, rets);
         }
 
         ct_mouse(TRUE);                 /* grab screen sink     */

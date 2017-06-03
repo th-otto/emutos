@@ -532,7 +532,7 @@ static void __CDECL vdi_mousex_handler (WORD scancode)
  * exit:           none
  */
 
-void vdimouse_init(Vwk * vwk)
+void vdimouse_init(void)
 {
     struct kbdvecs *kbd_vectors;
     static const struct {
@@ -586,7 +586,7 @@ void vdimouse_init(Vwk * vwk)
  * vdimouse_exit - deinitialize/disable mouse
  */
 
-void vdimouse_exit(Vwk * vwk)
+void vdimouse_exit(void)
 {
     LONG * pointer;             /* help for storing LONGs in INTIN */
     struct kbdvecs *kbd_vectors;

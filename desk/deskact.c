@@ -23,15 +23,15 @@
 #include "obdefs.h"
 #include "rectfunc.h"
 #include "gsxdefs.h"
+
+#include "deskbind.h"
+#include "deskglob.h"
 #include "gembind.h"
 #include "deskapp.h"
 #include "deskfpd.h"
 #include "deskwin.h"
-#include "deskbind.h"
-
 #include "aesbind.h"
 #include "deskact.h"
-#include "deskglob.h"
 #include "deskmain.h"
 #include "desksupp.h"
 #include "deskins.h"
@@ -320,9 +320,7 @@ static void gr_drgplns(WORD in_mx, WORD in_my, GRECT *pc,
         if (!(obj->ob_state & SELECTED))
         {
             pa = i_find(dst_wh, *pdobj, NULL, NULL);
-            if (pa && ((pa->a_type == AT_ISFOLD) ||
-                       (pa->a_type == AT_ISDISK) ||
-                       (pa->a_type == AT_ISTRSH)))
+            if (pa)
             {
                 curr_wh = dst_wh;
                 curr_tree = tree;

@@ -302,6 +302,31 @@ static int next_logical(LONG *devices_available)
     return -1;
 }
 
+ /*
+ * getbpb_allowed - check if partition type supports GetBPB
+ */
+static BOOL getbpb_allowed(char *id)
+{
+    /* check for Atari-style partitions */
+    if ((strcmp(id,"BGM") == 0) || (strcmp(id,"GEM") == 0))
+        return TRUE;
+
+    /* check for certain DOS-style partitions */
+    if ((id[0] == '\0') && (id[1] == 'D'))
+    {
+        switch(id[2])
+        {
+        case 0x01:
+        case 0x04:
+        case 0x06:
+        case 0x0e:
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
 /*
  * Add a partition's details to the device's partition description.
  */
@@ -330,9 +355,13 @@ int add_partition(UWORD unit, LONG *devices_available, char id[], ULONG start, U
     b->start = start;
     b->size  = size;
 
-    b->valid = 1;
+    b->flags = DEVICE_VALID;
     b->mediachange = MEDIANOCHANGE;
     b->unit  = unit;
+
+    /* flag partitions that support GetBPB() */
+    if (getbpb_allowed(id))
+        b->flags |= GETBPB_ALLOWED;
 
     /* make just GEM/BGM partitions visible to applications */
 /*
@@ -377,7 +406,7 @@ static LONG __CDECL blkdev_rwabs(WORD rw, UBYTE *buf, WORD cnt, WORD recnr, WORD
      */
     if (! (rw & RW_NOTRANSLATE)) {      /* logical */
         int sectors;
-        if ((dev < 0 ) || (dev >= BLKDEVNUM) || !blkdev[dev].valid)
+        if ((dev < 0 ) || (dev >= BLKDEVNUM) || !(blkdev[dev].flags&DEVICE_VALID))
             return EUNDEV;  /* unknown device */
 
         if (blkdev[dev].bpb.recsiz == 0)/* invalid BPB, e.g. FAT32 or ext2 */
@@ -514,7 +543,7 @@ LONG __CDECL blkdev_getbpb(WORD dev)
 
     KDEBUG(("blkdev_getbpb(%d)\n",dev));
 
-    if ((dev < 0 ) || (dev >= BLKDEVNUM) || !bdev->valid)
+    if ((dev < 0 ) || (dev >= BLKDEVNUM) || !(bdev->flags&DEVICE_VALID))
         return 0L;  /* unknown device */
 
     unit = bdev->unit;
@@ -540,6 +569,10 @@ LONG __CDECL blkdev_getbpb(WORD dev)
      */
     if ((unit >= NUMFLOPPIES) && (units[unit].features & UNIT_REMOVABLE))
         disk_mediach(unit);     /* check for change & rescan partitions if so */
+
+    /* check if this device supports GetBPB() */
+    if (!(bdev->flags & GETBPB_ALLOWED))
+        return 0L;              /* no can do */
 
     /* now we can read the bootsector using the physical mode */
     do {
@@ -642,7 +675,7 @@ static LONG __CDECL blkdev_mediach(WORD dev)
     UWORD unit = b->unit;
     LONG ret;
 
-    if ((dev < 0 ) || (dev >= BLKDEVNUM) || !b->valid)
+    if ((dev < 0 ) || (dev >= BLKDEVNUM) || !(b->flags&DEVICE_VALID))
         return EUNDEV;  /* unknown device */
 
     /* if we've already marked the drive as MEDIACHANGE, don't change it */

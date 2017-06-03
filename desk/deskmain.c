@@ -30,11 +30,12 @@
 #include "gemdos.h"
 #include "optimize.h"
 
+#include "deskbind.h"
+#include "deskglob.h"
 #include "gembind.h"
 #include "deskapp.h"
 #include "deskfpd.h"
 #include "deskwin.h"
-#include "deskbind.h"
 
 #include "../bios/screen.h"
 #include "../bios/videl.h"
@@ -44,7 +45,6 @@
 
 #include "aesbind.h"
 #include "desksupp.h"
-#include "deskglob.h"
 #include "deskins.h"
 #include "deskinf.h"
 #include "deskdir.h"
@@ -66,7 +66,7 @@ typedef struct {
 } KEYTAB;
 
 #define abs(x) ( (x) < 0 ? -(x) : (x) )
-#define menu_text(tree,inum,ptext) (((tree)+(inum))->ob_spec = ptext)
+#define menu_text(tree,inum,ptext) (((tree)+(inum))->ob_spec = (LONG)ptext)
 
 
 #define ESC     0x1b
@@ -182,8 +182,8 @@ static const WORD  dura[]=
 #endif
 
 
-static LONG     ad_ptext;
-static LONG     ad_picon;
+static BYTE *ad_ptext;
+static BYTE *ad_picon;
 
 static int can_change_resolution;
 
@@ -442,7 +442,7 @@ static WORD do_filemenu(WORD item)
 static WORD do_viewmenu(WORD item)
 {
     WORD newview, newsort, rc = 0;
-    LONG ptext;
+    BYTE *ptext;
 
     newview = G.g_iview;
     newsort = G.g_isort;
@@ -585,8 +585,6 @@ static WORD hndl_button(WORD clicks, WORD mx, WORD my, WORD button, WORD keystat
     WORD done, junk;
     GRECT c;
     WORD wh, dobj, dest_wh;
-    WORD root;
-    WNODE *wn;
 
     done = FALSE;
 
@@ -610,14 +608,7 @@ static WORD hndl_button(WORD clicks, WORD mx, WORD my, WORD button, WORD keystat
                                 &keystate, &c, &dobj);
             if (dest_wh != NIL)
             {
-                root = 1;
-                if (dest_wh != 0)
-                {
-                    wn = win_find(dest_wh);
-                    if (wn)
-                        root = wn->w_root;
-                }
-                fun_drag(wh, dest_wh, root, dobj, mx, my, keystate);
+                done = fun_drag(wh, dest_wh, 0, dobj, mx, my, keystate);
                 desk_clear(wh);
             }
         }
@@ -724,7 +715,7 @@ static WORD process_funkey(WORD funkey)
         pfname = filename_start(pa->a_pappl);
         /* copy pathname including trailing backslash */
         strlcpy(pathname,pa->a_pappl,pfname-pa->a_pappl+1);
-        return do_aopen(pa,1,-1,pathname,pfname);
+        return do_aopen(pa,1,-1,pathname,pfname,NULL);
     }
 
     return -1;
@@ -1468,8 +1459,10 @@ static void desk_xlate_fix(void)
     /* slightly adjust the about box for a timestamp build */
     if (version[1] != '.')
     {
-        objlabel->ob_spec = (LONG) "";  /* remove the word "Version" */
-        objversion->ob_x -= 6;          /* and move the start of the string */
+        objlabel->ob_flags |= HIDETREE;   /* hide the word "Version" */
+        objversion->ob_x = 0;             /* and enlarge the version object */
+        objversion->ob_width = 40;
+        objversion->ob_flags |= CENTRE_ALIGNED;
     }
 
     /* insert the version number */

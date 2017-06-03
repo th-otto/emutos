@@ -30,18 +30,18 @@
 #include "gemdos.h"
 #include "optimize.h"
 
+#include "deskbind.h"
+#include "deskglob.h"
 #include "deskapp.h"
 #include "deskfpd.h"
 #include "deskwin.h"
 #include "gembind.h"
-#include "deskbind.h"
 #include "../bios/videl.h"
 #include "../bios/amiga.h"
 #include "aesbind.h"
 #include "deskrsrc.h"
 #include "deskfun.h"
 #include "deskobj.h"
-#include "deskglob.h"
 #include "deskmain.h"
 #include "deskdir.h"
 #include "deskins.h"
@@ -445,9 +445,9 @@ static WORD setup_iconblks(const ICONBLK *ibstart, WORD count)
      * Finally we do the transforms
      */
     for (i = 0, p = maskstart; i < count; i++, p += num_bytes)
-        gsx_trans((LONG)p, iwb, (LONG)p, iwb, ih);
+        gsx_trans(p, iwb, p, iwb, ih);
     for (i = 0, p = datastart; i < count; i++, p += num_bytes)
-        gsx_trans((LONG)p, iwb, (LONG)p, iwb, ih);
+        gsx_trans(p, iwb, p, iwb, ih);
 
     return 0;
 }

@@ -217,20 +217,15 @@ WORD inf_what(OBJECT *tree, WORD ok, WORD cncl)
 /*
  *  Convert a single hex ASCII digit to the corresponding decimal number
  *
- *  Note that this could be static, since it is used only within this
- *  module.  However, making it so will consume more code space in
- *  current versions of GCC, even with -Os optimisation
+ *  Validation of input has been given up in order to minimize the size of the
+ *  generated code enough to making inlining it result in smaller total code size.
  */
-UBYTE hex_dig(BYTE achar)
+static UBYTE hex_dig(BYTE achar)
 {
-    if ((achar >= '0') && (achar <= '9'))
-        return (achar - '0');
+    if (achar >= 'A')
+        achar += 9;
 
-    achar = toupper(achar);
-    if ((achar >= 'A') && (achar <= 'F'))
-        return (achar - 'A' + 10);
-
-    return 0;
+    return achar & 0x0f;
 }
 
 

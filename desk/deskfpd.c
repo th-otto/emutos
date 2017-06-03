@@ -25,14 +25,13 @@
 #include "gemdos.h"
 #include "optimopt.h"
 
+#include "deskbind.h"
+#include "deskglob.h"
 #include "deskapp.h"
 #include "deskfpd.h"
 #include "deskwin.h"
 #include "dos.h"
-#include "deskbind.h"
-
 #include "deskrsrc.h"
-#include "deskglob.h"
 
 #include "string.h"
 #include "kprint.h"
@@ -89,7 +88,7 @@ FNODE *fpd_ofind(FNODE *pf, WORD obj)
 static void fl_free(PNODE *pn)
 {
     if (pn->p_fbase)
-        dos_free((LONG)pn->p_fbase);
+        dos_free(pn->p_fbase);
 
     pn->p_fbase = pn->p_flist = NULL;
     pn->p_count = 0;
@@ -284,7 +283,7 @@ FNODE *pn_sort(PNODE *pn)
     }
     pf->f_next = (FNODE *) NULL;
 
-    dos_free((LONG)ml_pfndx);
+    dos_free(ml_pfndx);
 
     return newlist;
 }
@@ -329,7 +328,7 @@ WORD pn_active(PNODE *pn)
 
     if (count == 0)
     {
-        dos_free((LONG)pn->p_fbase);
+        dos_free(pn->p_fbase);
         pn->p_fbase = NULL;
         return 0;
     }

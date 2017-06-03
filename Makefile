@@ -500,7 +500,7 @@ aranym: override DEF += -DMACHINE_ARANYM
 aranym: CPUFLAGS = -m68040
 aranym:
 	@echo "# Building ARAnyM EmuTOS into $(ROM_ARANYM)"
-	$(MAKE) CPUFLAGS='$(CPUFLAGS)' DEF='$(DEF)' ROM_512=$(ROM_ARANYM) $(ROM_ARANYM)
+	$(MAKE) CPUFLAGS=$(CPUFLAGS) DEF='$(DEF)' ROM_512=$(ROM_ARANYM) $(ROM_ARANYM)
 	@MEMBOT=$(call SHELL_SYMADDR,__end_os_stram,emutos.map);\
 	echo "# RAM used: $$(($$MEMBOT)) bytes ($$(($$MEMBOT - $(MEMBOT_TOS404))) bytes more than TOS 4.04)"
 
@@ -536,16 +536,16 @@ AMIGA_DEFS =
 AROS = 0
 ifeq (1,$(AROS))
 AMIGA_DEFS += -DCONF_WITH_AROS=1
-OPTFLAGS = $(SMALL_OPTFLAGS)
 endif
 
 .PHONY: amiga
 NODEP += amiga
 amiga: UNIQUE = $(COUNTRY)
+amiga: OPTFLAGS = $(SMALL_OPTFLAGS)
 amiga: override DEF += -DTARGET_AMIGA_ROM $(AMIGA_DEFS)
 amiga:
 	@echo "# Building Amiga EmuTOS into $(ROM_AMIGA)"
-	$(MAKE) CPUFLAGS='$(CPUFLAGS)' DEF='$(DEF)' UNIQUE=$(UNIQUE) ROM_AMIGA=$(ROM_AMIGA) $(ROM_AMIGA)
+	$(MAKE) CPUFLAGS=$(CPUFLAGS) DEF='$(DEF)' OPTFLAGS=$(OPTFLAGS) UNIQUE=$(UNIQUE) ROM_AMIGA=$(ROM_AMIGA) $(ROM_AMIGA)
 	@MEMBOT=$(call SHELL_SYMADDR,__end_os_stram,emutos.map);\
 	echo "# RAM used: $$(($$MEMBOT)) bytes ($$(($$MEMBOT - $(MEMBOT_TOS162))) bytes more than TOS 1.62)"
 
@@ -598,7 +598,7 @@ firebee: override DEF += -DMACHINE_FIREBEE
 firebee: CPUFLAGS = $(CPUFLAGS_FIREBEE)
 firebee:
 	@echo "# Building FireBee EmuTOS into $(SREC_FIREBEE)"
-	$(MAKE) COLDFIRE=1 CPUFLAGS='$(CPUFLAGS)' DEF='$(DEF)' LMA=0xe0600000 SRECFILE=$(SREC_FIREBEE) $(SREC_FIREBEE)
+	$(MAKE) COLDFIRE=1 CPUFLAGS=$(CPUFLAGS) DEF='$(DEF)' LMA=0xe0600000 SRECFILE=$(SREC_FIREBEE) $(SREC_FIREBEE)
 	@MEMBOT=$(call SHELL_SYMADDR,__end_os_stram,emutos.map);\
 	echo "# RAM used: $$(($$MEMBOT)) bytes ($$(($$MEMBOT - $(MEMBOT_TOS404))) bytes more than TOS 4.04)"
 
@@ -609,7 +609,7 @@ firebee-prg: override DEF += -DMACHINE_FIREBEE
 firebee-prg: CPUFLAGS = $(CPUFLAGS_FIREBEE)
 firebee-prg:
 	@echo "# Building FireBee $(EMUTOS_PRG)"
-	$(MAKE) COLDFIRE=1 CPUFLAGS='$(CPUFLAGS)' DEF='$(DEF)' OPTFLAGS=$(OPTFLAGS) prg
+	$(MAKE) COLDFIRE=1 CPUFLAGS=$(CPUFLAGS) DEF='$(DEF)' OPTFLAGS=$(OPTFLAGS) prg
 
 CPUFLAGS_M548X = -mcpu=5475
 
@@ -620,7 +620,7 @@ m548x-prg: override DEF += -DMACHINE_M548X -DCONF_WITH_BAS_MEMORY_MAP=1
 m548x-prg: CPUFLAGS = $(CPUFLAGS_M548X)
 m548x-prg:
 	@echo "# Building m548x $(EMUTOS_PRG)"
-	$(MAKE) COLDFIRE=1 CPUFLAGS='$(CPUFLAGS)' DEF='$(DEF)' OPTFLAGS=$(OPTFLAGS) prg
+	$(MAKE) COLDFIRE=1 CPUFLAGS=$(CPUFLAGS) DEF='$(DEF)' OPTFLAGS=$(OPTFLAGS) prg
 
 SREC_M548X_DBUG = emutos-m548x-dbug.s19
 .PHONY: m548x-dbug
@@ -630,7 +630,7 @@ m548x-dbug: override DEF += -DMACHINE_M548X
 m548x-dbug: CPUFLAGS = $(CPUFLAGS_M548X)
 m548x-dbug:
 	@echo "# Building M548x dBUG EmuTOS in $(SREC_M548X_DBUG)"
-	$(MAKE) COLDFIRE=1 CPUFLAGS='$(CPUFLAGS)' DEF='$(DEF)' UNIQUE=$(UNIQUE) LMA=0x00e00000 SRECFILE=$(SREC_M548X_DBUG) $(SREC_M548X_DBUG)
+	$(MAKE) COLDFIRE=1 CPUFLAGS=$(CPUFLAGS) DEF='$(DEF)' UNIQUE=$(UNIQUE) LMA=0x00e00000 SRECFILE=$(SREC_M548X_DBUG) $(SREC_M548X_DBUG)
 	@MEMBOT=$(call SHELL_SYMADDR,__end_os_stram,emutos.map);\
 	echo "# RAM used: $$(($$MEMBOT)) bytes ($$(($$MEMBOT - $(MEMBOT_TOS404))) bytes more than TOS 4.04)"
 
@@ -642,7 +642,7 @@ m548x-bas: override DEF += -DMACHINE_M548X -DCONF_WITH_BAS_MEMORY_MAP=1
 m548x-bas: CPUFLAGS = $(CPUFLAGS_M548X)
 m548x-bas:
 	@echo "# Building M548x BaS_gcc EmuTOS in $(SREC_M548X_BAS)"
-	$(MAKE) COLDFIRE=1 CPUFLAGS='$(CPUFLAGS)' DEF='$(DEF)' UNIQUE=$(UNIQUE) LMA=0xe0100000 SRECFILE=$(SREC_M548X_BAS) $(SREC_M548X_BAS)
+	$(MAKE) COLDFIRE=1 CPUFLAGS=$(CPUFLAGS) DEF='$(DEF)' UNIQUE=$(UNIQUE) LMA=0xe0100000 SRECFILE=$(SREC_M548X_BAS) $(SREC_M548X_BAS)
 	@MEMBOT=$(call SHELL_SYMADDR,__end_os_stram,emutos.map);\
 	echo "# RAM used: $$(($$MEMBOT)) bytes ($$(($$MEMBOT - $(MEMBOT_TOS404))) bytes more than TOS 4.04)"
 
@@ -723,9 +723,10 @@ EMUTOS_ADF = emutos.adf
 .PHONY: amigaflop
 NODEP += amigaflop
 amigaflop: UNIQUE = $(COUNTRY)
+amigaflop: OPTFLAGS = $(SMALL_OPTFLAGS)
 amigaflop: override DEF += -DTARGET_AMIGA_FLOPPY $(AMIGA_DEFS)
 amigaflop:
-	$(MAKE) CPUFLAGS=$(CPUFLAGS) DEF='$(DEF)' UNIQUE=$(UNIQUE) EMUTOS_ADF=$(EMUTOS_ADF) $(EMUTOS_ADF)
+	$(MAKE) CPUFLAGS=$(CPUFLAGS) DEF='$(DEF)' OPTFLAGS=$(OPTFLAGS) UNIQUE=$(UNIQUE) EMUTOS_ADF=$(EMUTOS_ADF) $(EMUTOS_ADF)
 	@MEMBOT=$(call SHELL_SYMADDR,__end_os_stram,emutos.map);\
 	echo "# RAM used: $$(($$MEMBOT)) bytes"
 
@@ -745,7 +746,6 @@ amigaflopwinuae: override DEF += -DSTATIC_ALT_RAM_ADDRESS=0x40000000 $(AMIGA_DEF
 amigaflopwinuae: CPUFLAGS = -m68040
 amigaflopwinuae: amigaflop
 
-$(EMUTOS_ADF): OPTFLAGS = $(SMALL_OPTFLAGS)
 $(EMUTOS_ADF): amigaboot.img emutos.img mkrom
 	./mkrom amiga-floppy amigaboot.img emutos.img $@
 
@@ -1168,19 +1168,13 @@ include local.mk
 endif
 
 #
-# clean and distclean
-# (distclean is called before creating a source archive)
+# clean
 #
 
 .PHONY: clean
 NODEP += clean
 clean:
 	rm -f $(TOCLEAN)
-
-.PHONY: distclean
-NODEP += distclean
-distclean: clean
-	rm -f '.#'* */'.#'*
 
 #
 # ColdFire autoconverted sources.
@@ -1209,18 +1203,25 @@ vdi/%_preprocessed.s: vdi/%.S
 NODEP += $(GENERATED_COLDFIRE_SOURCES)
 vdi/%_cf.S: vdi/%_preprocessed.s
 	cd $(<D) && $(PORTASM) $(PORTASMFLAGS) -o $(@F) $(<F)
+	dos2unix $@
 	sed -i $@ \
 		-e "s:\.section\t.bss,.*:.bss:g" \
 		-e "s:\( \|\t\)bsr\(  \|\..\):\1jbsr :g" \
-		-e "s:\( \|\t\)bra\(  \|\..\):\1jbra :g" \
-		-e "s:\( \|\t\)beq\(  \|\..\):\1jbeq :g" \
-		-e "s:\( \|\t\)bne\(  \|\..\):\1jbne :g" \
-		-e "s:\( \|\t\)bgt\(  \|\..\):\1jbgt :g" \
-		-e "s:\( \|\t\)bge\(  \|\..\):\1jbge :g" \
-		-e "s:\( \|\t\)blt\(  \|\..\):\1jblt :g" \
-		-e "s:\( \|\t\)ble\(  \|\..\):\1jble :g" \
-		-e "s:\( \|\t\)bcc\(  \|\..\):\1jbcc :g" \
-		-e "s:\( \|\t\)bcs\(  \|\..\):\1jbcs :g" \
+		-e "s:\( \|\t\)bra\(  \|\..\):\1jra  :g" \
+		-e "s:\( \|\t\)beq\(  \|\..\):\1jeq  :g" \
+		-e "s:\( \|\t\)bne\(  \|\..\):\1jne  :g" \
+		-e "s:\( \|\t\)bgt\(  \|\..\):\1jgt  :g" \
+		-e "s:\( \|\t\)bge\(  \|\..\):\1jge  :g" \
+		-e "s:\( \|\t\)blt\(  \|\..\):\1jlt  :g" \
+		-e "s:\( \|\t\)ble\(  \|\..\):\1jle  :g" \
+		-e "s:\( \|\t\)bcc\(  \|\..\):\1jcc  :g" \
+		-e "s:\( \|\t\)bcs\(  \|\..\):\1jcs  :g" \
+		-e "s:\( \|\t\)bpl\(  \|\..\):\1jpl  :g" \
+		-e "s:\( \|\t\)bmi\(  \|\..\):\1jmi  :g" \
+		-e "s:\( \|\t\)bhi\(  \|\..\):\1jhi  :g" \
+		-e "s:\( \|\t\)blo\(  \|\..\):\1jlo  :g" \
+		-e "s:\( \|\t\)bhs\(  \|\..\):\1jhs  :g" \
+		-e "s:\( \|\t\)bls\(  \|\..\):\1jls  :g" \
 		-e "s:\( \|,\)0(%:\1(%:g"
 
 #

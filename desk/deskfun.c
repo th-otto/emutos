@@ -28,19 +28,19 @@
 #include "gemdos.h"
 #include "optimize.h"
 
+#include "deskbind.h"
+#include "deskglob.h"
 #include "deskapp.h"
 #include "deskfpd.h"
 #include "deskwin.h"
 #include "gembind.h"
-#include "deskbind.h"
-
 #include "aesbind.h"
 #include "deskmain.h"
-#include "deskglob.h"
 #include "desksupp.h"
 #include "deskdir.h"
 #include "deskfun.h"
 #include "deskins.h"
+#include "deskpro.h"
 #include "biosdefs.h"
 
 #include "string.h"
@@ -48,6 +48,16 @@
 #include "kprint.h"
 
 
+/*
+ * the following global is initialised to FALSE in fun_drag().
+ * it will be set to TRUE by file2desk() (called indirectly by
+ * fun_drag()) when a file has been dropped onto a desktop icon
+ * representing an executable program.
+ *
+ * the global is returned by fun_drag(), and if TRUE, the desktop
+ * will subsequently exit to allow the program to run.
+ */
+static BOOL exit_desktop;
 
 /*
  *  Issue an alert
@@ -296,8 +306,7 @@ static WORD source_is_parent(BYTE *psrc_path, FNODE *pflist, BYTE *pdst_path)
                 for (pf = pflist; pf; pf = pf->f_next)
                 {
                     /* exit if same subdir  */
-                    if ( (pf->f_obid != NIL) &&
-                        (G.g_screen[pf->f_obid].ob_state & SELECTED) &&
+                    if ( fnode_is_selected(pf) &&
                         (pf->f_attr & F_SUBDIR) &&
                         (!strcmp(pf->f_name, tdst)) )
                     {
@@ -387,6 +396,30 @@ static void fun_full_close(WNODE *pw)
 
 
 /*
+ *  Removes the lowest level of folder from a pathname, assumed
+ *  to be of the form:
+ *      D:\X\Y\Z\F.E
+ *  where X,Y,Z are folders and F.E is a filename.  In the above
+ *  example, this would change D:\X\Y\Z\F.E to D:\X\Y\F.E
+ */
+static void remove_one_level(BYTE *pathname)
+{
+    BYTE *stop = pathname+2;    /* the first path separator */
+    BYTE *filename, *prev;
+
+    filename = filename_start(pathname);
+    if (filename-1 <= stop)     /* already at the root */
+        return;
+
+    for (prev = filename-2; prev >= stop; prev--)
+        if (*prev == '\\')
+            break;
+
+    strcpy(prev+1,filename);
+}
+
+
+/*
  * full or partial close of desktop window
  */
 void fun_close(WNODE *pw, WORD closetype)
@@ -429,15 +462,40 @@ void fun_close(WNODE *pw, WORD closetype)
 }
 
 
+/*
+ * builds the full pathname corresponding to the first selected file
+ * in the specified PNODE
+ *
+ * returns FALSE if no file is selected (probable program bug)
+ */
+static BOOL build_selected_path(PNODE *pn, BYTE *pathname)
+{
+    FNODE *fn;
+
+    for (fn = pn->p_flist; fn; fn = fn->f_next)
+    {
+        if (fnode_is_selected(fn))
+            break;
+    }
+    if (!fn)
+        return FALSE;
+
+    strcpy(pathname,pn->p_spec);
+    add_fname(pathname,fn->f_name);
+    return TRUE;
+}
+
 
 /*
  *  Routine to call when several icons have been dragged from a
  *  window to another window (it might be the same window) and
  *  dropped on a particular icon or open space.
  *
- *  Note that, for DESK1, this is NEVER called if either the source
- *  or destination is the desktop.  Therefore 'datype' can ONLY be
- *  AT_ISFILE or AT_ISFOLD.
+ *  This can be invoked when copying/moving files, or when launching
+ *  a program via drag-and-drop.
+ *
+ *  Note that this is NEVER called if either the source or destination
+ *  is the desktop.  Thus 'datype' can ONLY be AT_ISFILE or AT_ISFOLD.
  */
 static void fun_win2win(WORD src_wh, WORD dst_wh, WORD dst_ob, WORD keystate)
 {
@@ -456,7 +514,24 @@ static void fun_win2win(WORD src_wh, WORD dst_wh, WORD dst_ob, WORD keystate)
         return;
 
     pda = i_find(dst_wh, dst_ob, &pdf, NULL);
-    datype = (pda) ? pda->a_type : AT_ISFILE;
+
+    if (pda)
+    {
+        if (pda->a_aicon >= 0)      /* dropping file on to an application */
+        {
+            if (build_selected_path(psw->w_path, destpath))
+            {
+                /* set global so desktop will exit if do_aopen() succeeds */
+                exit_desktop = do_aopen(pda, 1, dst_ob, pdw->w_path->p_spec, pdf->f_name, destpath);
+                return;
+            }
+        }
+        datype = pda->a_type;
+    }
+    else
+    {
+        datype = AT_ISFILE;
+    }
 
     /* set up default destination path name */
     strcpy(destpath, pdw->w_path->p_spec);
@@ -487,7 +562,7 @@ static void fun_win2win(WORD src_wh, WORD dst_wh, WORD dst_ob, WORD keystate)
 static WORD fun_file2desk(PNODE *pn_src, WORD icontype_src, ANODE *an_dest, WORD dobj, WORD keystate)
 {
     ICONBLK *dicon;
-    BYTE pathname[10];      /* must be long enough for X:\\*.* */
+    BYTE pathname[MAXPATHLEN];
     WORD operation, ret;
 
     pathname[1] = ':';      /* set up everything except drive letter */
@@ -498,6 +573,30 @@ static WORD fun_file2desk(PNODE *pn_src, WORD icontype_src, ANODE *an_dest, WORD
     {
         switch(an_dest->a_type)
         {
+#if CONF_WITH_DESKTOP_SHORTCUTS
+        BYTE tail[MAXPATHLEN];
+
+        case AT_ISFILE:     /* dropping something onto a file */
+            if (an_dest->a_aicon < 0)       /* is target a program? */
+                break;                      /* no, do nothing */
+
+            /* build the full tail to pass to the target program */
+            if (!build_selected_path(pn_src,tail))
+                break;
+
+            /* build pathname for do_aopen() */
+            strcpy(pathname,an_dest->a_pdata);
+            strcpy(filename_start(pathname),"*.*");
+
+            /* set global so desktop will exit if do_aopen() succeeds */
+            exit_desktop = do_aopen(an_dest, 1, dobj, pathname, an_dest->a_pappl, tail);
+            break;
+        case AT_ISFOLD:     /* dropping file on folder - copy or move */
+            strcpy(pathname,an_dest->a_pdata);
+            strcat(pathname,"\\*.*");
+            operation = (keystate&MODE_CTRL) ? OP_MOVE : OP_COPY;
+            break;
+#endif
         case AT_ISDISK:
             dicon = (ICONBLK *)G.g_screen[dobj].ob_spec;
             pathname[0] = LOBYTE(dicon->ib_char);
@@ -682,8 +781,10 @@ static void fun_desk2desk(WORD dobj, WORD keystate)
 }
 
 
-void fun_drag(WORD wh, WORD dest_wh, WORD sobj, WORD dobj, WORD mx, WORD my, WORD keystate)
+BOOL fun_drag(WORD wh, WORD dest_wh, WORD sobj, WORD dobj, WORD mx, WORD my, WORD keystate)
 {
+    exit_desktop = FALSE;   /* may be set to TRUE by fun_file2desk() */
+
     if (wh)
     {
         if (dest_wh)    /* dragging from window to window, */
@@ -692,7 +793,7 @@ void fun_drag(WORD wh, WORD dest_wh, WORD sobj, WORD dobj, WORD mx, WORD my, WOR
         }
         else            /* dragging from window to desktop */
         {
-            if (sobj == dobj)   /* dropping onto desktop surface */
+            if (dobj == DROOT)  /* dropping onto desktop surface */
             {
 #if CONF_WITH_DESKTOP_SHORTCUTS
                 ins_shortcut(wh, mx, my);
@@ -712,10 +813,11 @@ void fun_drag(WORD wh, WORD dest_wh, WORD sobj, WORD dobj, WORD mx, WORD my, WOR
         }
         else            /* dragging from desktop to desktop,   */
         {               /* e.g. copying a disk to another disk */
-            if (sobj != dobj)
-                fun_desk2desk(dobj, keystate);
+            fun_desk2desk(dobj, keystate);
         }
     }
+
+    return exit_desktop;
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

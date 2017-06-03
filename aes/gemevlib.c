@@ -43,7 +43,7 @@ WORD    gl_ticktime;
  */
 static void ev_rets(WORD rets[])
 {
-    if (mtrans)
+    if (mtrans > 1)
     {
         rets[0] = pr_xrat;
         rets[1] = pr_yrat;
@@ -123,7 +123,7 @@ void ev_timer(LONG count)
  *  Do a multi-wait on the specified events
  */
 WORD ev_multi(WORD flags, MOBLK *pmo1, MOBLK *pmo2, LONG tmcount,
-              LONG buparm, LONG mebuff, WORD prets[])
+              LONG buparm, WORD *mebuff, WORD prets[])
 {
     QPB     m;
     EVSPEC  which;
@@ -212,7 +212,7 @@ WORD ev_multi(WORD flags, MOBLK *pmo1, MOBLK *pmo2, LONG tmcount,
         {
             m.qpb_ppd = rlr;
             m.qpb_cnt = 16;
-            m.qpb_buf = mebuff;
+            m.qpb_buf = (LONG)mebuff;
             iasync(MU_MESAG, (LONG)&m);
         }
         /* wait for timer */
