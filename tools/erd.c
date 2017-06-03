@@ -2010,7 +2010,10 @@ short iconchar;
 char temp[MAX_STRLEN];
 ICONBLK *iconblk;
 char *base = (char *)rschdr;
-int wicon, hicon, w, h;
+#ifdef ICON_RSC
+int wicon = 0, hicon = 0;
+#endif
+int w, h;
 int in_cond;
 
     nib = rsh.nib;
@@ -2030,7 +2033,6 @@ int in_cond;
     /*
      * then we create the actual icon mask/data arrays
      */
-    wicon = hicon = 0;
     in_cond = 0;
     for (i = 0, iconblk = alliconblks; i < nic; i++, iconblk++) {
         w = get_short(&iconblk->ib_wicon);
@@ -2052,12 +2054,12 @@ int in_cond;
         }
         if (i != 0 && (w != wicon || h != hicon))
             error("mismatch in icon dimensions", NULL);
-#endif
         if (i == 0)
         {
             wicon = w;
             hicon = h;
         }
+#endif
         if (i == conditional_iconblk_start)
         {
             fprintf(fp,"%s\n",other_cond.string);
