@@ -263,6 +263,15 @@
 #endif
 
 /*
+ * Defaults for the 256 target.
+ */
+#ifdef TARGET_256
+# ifndef CONF_WITH_BUILTIN_COLORICONS
+#  define CONF_WITH_BUILTIN_COLORICONS 0
+# endif
+#endif
+
+/*
  * Defaults for the diagnostic cartridge target (maximum size 128K).
  * When this is selected, the Makefile excludes AES support in order
  * to reduce ROM size.  However this is still insufficient, so we
@@ -1012,6 +1021,17 @@
  */
 #ifndef CONF_WITH_COLORICONS
 # define CONF_WITH_COLORICONS 1
+#endif
+
+/*
+ * Set CONF_WITH_BUILTIN_COLORICONS to 1 to add support for
+ * color icons compiled into ROM
+ */
+#ifndef CONF_WITH_BUILTIN_COLORICONS
+# define CONF_WITH_BUILTIN_COLORICONS CONF_WITH_COLORICONS
+#endif
+#if CONF_WITH_BUILTIN_COLORICONS && !CONF_WITH_COLORICONS
+# error CONF_WITH_BUILTIN_COLORICONS cannot be used without CONF_WITH_COLORICONS
 #endif
 
 /*

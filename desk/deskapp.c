@@ -344,7 +344,7 @@ static BYTE *app_parse(BYTE *pcurr, ANODE *pa)
 }
 
 
-#if CONF_WITH_COLORICONS
+#if CONF_WITH_COLORICONS || CONF_WITH_BUILTIN_COLORICONS
 
 /*
  * set up ICONBLK stuff - all the hard work is done here
@@ -494,7 +494,7 @@ static WORD load_user_icons(void)
     return rc;
 }
 
-#else
+#else /* !CONF_WITH_COLORICONS */
 
 /*
  * set up ICONBLK stuff - all the hard work is done here
@@ -637,7 +637,7 @@ static WORD load_user_icons(void)
     return rc;
 }
 
-#endif /* CONF_WITH_COLORICONS */
+#endif /* CONF_WITH_COLORICONS || CONF_WITH_BUILTIN_COLORICONS */
 
 
 /*
@@ -695,14 +695,20 @@ static WORD initialise_anodes(void)
    Note 3: as of december 2016, EmuTOS now loads icons from the resource
    EMUICON.RSC in the root of the boot drive; if this is not available,
    it falls back to a minimal built-in set - RFB
+   Note 4: as of june 2017, EmuTOS now loads color icons from the resource
+   EMUCICN.RSC in the root of the boot drive; if this is not available,
+   it falls back to the monochrome version, or to a builtin set - THO
 */
 static WORD app_rdicon(void)
 {
+#if CONF_WITH_BUILTIN_COLORICONS && icon_RS_NCIB != 0
+    icon_rs_init();
+#endif
     /*
      * try to load user icons; if that fails, use builtin
      */
     if (load_user_icons() < 0)
-#if CONF_WITH_COLORICONS
+#if CONF_WITH_COLORICONS || CONF_WITH_BUILTIN_COLORICONS
         return setup_iconblks(icon_rs_obj, BUILTIN_IBLKS, icon_RS_NOBS);
 #else
         return setup_iconblks(icon_rs_iconblk, BUILTIN_IBLKS);

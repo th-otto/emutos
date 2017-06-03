@@ -187,6 +187,9 @@
  *  v4.9    roger burrows, april/2017
  *          . treat all single-character strings as non-translatable
  *          . don't generate unnecessary casts in write_c_epilogue() output
+ *
+ *  v4.10   thorsten otto, may/2017
+ *          . add support for color icons
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -340,6 +343,22 @@ typedef struct icon_block {
     SHORT ib_htext;
 } ICONBLK;
 
+typedef struct cicon {
+    SHORT num_planes;
+    OFFSET col_data;
+    OFFSET col_mask;
+    OFFSET sel_data;
+    OFFSET sel_mask;
+    OFFSET next_res;
+} CICON;
+
+typedef struct cicon_block {
+    ICONBLK monoblk;
+    OFFSET mainlist;
+} CICONBLK;
+
+#define CICON_STR_SIZE 12
+
 typedef struct bit_block {
     OFFSET bi_pdata;
     SHORT bi_wb;
@@ -398,7 +417,7 @@ typedef struct {
   #define PROGRAM_NAME  "ird"
 #endif
 
-#define VERSION         "v4.9"
+#define VERSION         "v4.10"
 #define MAX_STRLEN      300         /* max size for internal string areas */
 #define NLS             "N_("       /* the macro used in EmuTOS for NLS support*/
 
@@ -424,6 +443,16 @@ typedef struct {
     unsigned short nstring;         /* number of free strings */
     unsigned short nimages;         /* number of free images */
     unsigned short rssize;          /* total bytes in resource */
+
+    unsigned short num_ciconblks;       /* number of CICONBLK structures */
+    unsigned short num_cicons;          /* number of CICON structures */
+    unsigned long filesize;             /* actual filesize on disk */
+    unsigned long offset_cicontable;    /* offset to table of offsets of CICONBLKs */
+    unsigned long offset_palette;       /* offset to palette data (not yet supported) */
+    unsigned long size_colordata_4[2];  /* total size of colordata of 16 color icons */
+    unsigned long size_colordata_8[2];  /* total size of colordata of 256 color icons */
+    unsigned long size_selmask[2];      /* total size of memory needed at runtime for selected masks */
+    unsigned long size_monomask;        /* size of a single plane */
 } MY_RSHDR;
 
 /*
@@ -616,6 +645,8 @@ LOCAL int first_freestr = -1;           /* # of entry in def[] corresponding to 
 LOCAL char *tedinfo_status = NULL;
 LOCAL char *bitblk_status = NULL;
 LOCAL char *iconblk_status = NULL;
+LOCAL char *ciconblk_status = NULL;
+LOCAL char *cicon_status = NULL;
 
 /*
  *  the following values are derived such that *all* items from
@@ -626,6 +657,8 @@ LOCAL int conditional_object_start;
 LOCAL int conditional_tedinfo_start;
 LOCAL int conditional_bitblk_start;
 LOCAL int conditional_iconblk_start;
+LOCAL int conditional_ciconblk_start;
+LOCAL int conditional_cicon_start;
 
 /*
  *  the following control generation of trees and objects
@@ -680,7 +713,7 @@ LOCAL const TYPE typelist[] = {
     { G_BUTTON,   "G_BUTTON" },   { G_BOXCHAR, "G_BOXCHAR" },
     { G_STRING,   "G_STRING" },   { G_FTEXT,   "G_FTEXT" },
     { G_FBOXTEXT, "G_FBOXTEXT" }, { G_ICON,    "G_ICON" },
-    { G_TITLE,    "G_TITLE" },    { G_CICON,   "G_CICON" },
+    { G_TITLE,    "G_TITLE" },    { G_CICON,   "G_BUILTIN_CICON" },
     { 0,          NULL } };
 
 
@@ -714,6 +747,7 @@ PRIVATE int getlen(int *length,char *s);
 PRIVATE short get_short(SHORT *p);
 PRIVATE unsigned short get_ushort(USHORT *p);
 PRIVATE unsigned long get_offset(OFFSET *p);
+PRIVATE void put_offset(OFFSET *p, unsigned long val);
 PRIVATE int init_all_status(MY_RSHDR *hdr);
 PRIVATE void init_notrans(int n);
 PRIVATE int init_status(char **array,int entries);
@@ -746,6 +780,7 @@ PRIVATE int write_h_define(FILE *fp);
 PRIVATE int write_h_extern(FILE *fp);
 PRIVATE int write_bitblk(FILE *fp);
 PRIVATE int write_iconblk(FILE *fp);
+PRIVATE int write_ciconblk(FILE *fp);
 PRIVATE int write_include(FILE *fp,char *name);
 PRIVATE int write_object(FILE *fp);
 PRIVATE int write_obspec(FILE *fp,OBJECT *obj,const char *conditional);
@@ -890,6 +925,8 @@ char s[MAX_STRLEN];
 
     fclose(rscfp);
 
+    rsh.filesize = fsize;
+
     hdr = (RSHDR *)base;
     vrsn = get_ushort(&hdr->rsh_vrsn);
     if ((vrsn&~NEWRSC_FORMAT) > 1) {
@@ -906,12 +943,122 @@ char s[MAX_STRLEN];
     return hdr;
 }
 
+
+static long calc_planesize(int w, int h)
+{
+    return (long) ((w + 15) / 16) * h * 2;
+}
+
+/*
+ * fix up the offsets of the monochrome part of a coloricon
+ */
+static CICONBLK *fix_mono(char *base, CICONBLK *ptr, long plane_size)
+{
+    char *end;
+    unsigned int offset;
+
+    /* data follows CICONBLK structure */
+    end = (char *)(ptr + 1);
+    put_offset(&ptr->monoblk.ib_pdata, end - base);
+    /* mask follows data */
+    end = end + plane_size;
+    put_offset(&ptr->monoblk.ib_pmask, end - base);
+    /* text follows mask */
+    end = end + plane_size;
+    /*
+     * There is space for a 12-character icon text.
+     * If it is longer, it is relocated just like other objects.
+     */
+    offset = get_offset(&ptr->monoblk.ib_ptext);
+    if (offset == 0)
+        put_offset(&ptr->monoblk.ib_ptext, end - base);
+    /* next CICONBLK structure follows icon text */
+    end = end + CICON_STR_SIZE;
+    return (CICONBLK *)end;
+}
+
+
+/*
+ * fix up the offsets of a single color icon
+ */
+static void *fixup_cicon(char *base, CICON *ptr, long mono_size)
+{
+    char *end;
+    long color_size;
+    unsigned int offset;
+    short planes;
+
+    end = (char *) ptr + sizeof(CICON);
+    put_offset(&ptr->col_data, end - base);
+    planes = get_short(&ptr->num_planes);
+    if (planes != 1 && planes != 4 && planes != 8)
+        error("unsupported number of planes", NULL);
+    color_size = planes * mono_size;
+    end = end + color_size;
+    put_offset(&ptr->col_mask, end - base);
+    end = end + mono_size;
+    offset = get_offset(&ptr->sel_data);
+    if (offset)
+    {                                   /* there are some selected icons */
+        put_offset(&ptr->sel_data, end - base);
+        end = end + color_size;
+        put_offset(&ptr->sel_mask, end - base);
+        end = end + mono_size;
+    }
+    return end;
+}
+
+
+/*
+ * fix up the offsets of all color icons in the resource
+ */
+static void fixup_cicons(char *base, CICONBLK *ptr, int tot_icons, OFFSET *carray)
+{
+    int tot_resicons;
+    int i, j;
+    long mono_size;                     /* size of a single mono icon in bytes */
+    OFFSET *next_res;
+    CICON *cicon;
+    int width, height;
+
+    for (i = 0; i < tot_icons; i++)
+    {
+        put_offset(&carray[i], (char *)ptr - base);
+        width = get_short(&ptr->monoblk.ib_wicon);
+        height = get_short(&ptr->monoblk.ib_hicon);
+        /* in the file, first link contains number of CICON structures */
+        tot_resicons = (int)(long)get_offset(&ptr->mainlist);
+        mono_size = calc_planesize(width, height);
+        next_res = &ptr->mainlist;
+        ptr = fix_mono(base, ptr, mono_size);
+        if (tot_resicons)
+        {
+            cicon = (CICON *)ptr;
+            for (j = 0; j < tot_resicons; j++)
+            {
+                put_offset(next_res, (char *)cicon - base);
+                next_res = &cicon->next_res;
+                cicon = fixup_cicon(base, cicon, mono_size);
+            }
+            put_offset(next_res, 0);
+            ptr = (CICONBLK *)cicon;
+            rsh.num_cicons += tot_resicons;
+        }
+    }
+}
+
+
 /*
  *  convert header to internal representation
  *  (save converting for each use)
+ *  Also scans extended resource files for coloricons,
+ *  and calculates their offsets
  */
 PRIVATE void convert_header(RSHDR *hdr)
 {
+    OBJECT *obj, *obj_base;
+    unsigned short n;
+
     rsh.vrsn = get_ushort(&hdr->rsh_vrsn);
     rsh.object = get_ushort(&hdr->rsh_object);
     rsh.tedinfo = get_ushort(&hdr->rsh_tedinfo);
@@ -930,6 +1077,65 @@ PRIVATE void convert_header(RSHDR *hdr)
     rsh.nstring = get_ushort(&hdr->rsh_nstring);
     rsh.nimages = get_ushort(&hdr->rsh_nimages);
     rsh.rssize = get_ushort(&hdr->rsh_rssize);
+
+    obj_base = (OBJECT *)((char *)hdr + rsh.object);
+    rsh.num_ciconblks = 0;
+    rsh.num_cicons = 0;
+    for (obj = obj_base, n = 0; n < rsh.nobs; obj++, n++) {
+        switch(get_ushort(&obj->ob_type)&0xff) {
+        case G_CICON:
+            rsh.num_ciconblks++;
+            break;
+        }
+    }
+    if ((rsh.vrsn & NEWRSC_FORMAT) && rsh.num_ciconblks == 0)
+        error("extended resource format, but no coloricons found", inrsc);
+    if (!(rsh.vrsn & NEWRSC_FORMAT) && rsh.num_ciconblks != 0)
+        error("coloricons found, but standard resource format", inrsc);
+    if (rsh.vrsn & NEWRSC_FORMAT)
+    {
+        char *base = (char *)hdr;
+        char *fileend = base + rsh.filesize;
+        OFFSET *ctable = (OFFSET *)(base + rsh.rssize);
+        OFFSET *cicondata;
+        unsigned int offset;
+        int totalicons;
+        CICONBLK *ptr;
+
+        if ((rsh.rssize + 12u) > rsh.filesize)
+            error("missing extension table, file too short", inrsc);
+        if (get_offset(ctable) != rsh.filesize)
+            error("incorrect file length in RSC file",inrsc);
+        offset = get_offset(ctable + 1);
+        if (offset == 0 || offset == 0xFFFFFFFFUL)
+            error("missing offset to coloricon table in RSC file",inrsc);
+        rsh.offset_cicontable = offset;
+        cicondata = (OFFSET *)(base + offset);
+        offset = get_offset(ctable + 2);
+        if (offset != 0 && offset != 0xFFFFFFFFUL)
+        {
+            rsh.offset_palette = offset;
+            fprintf(stderr, "warning: resource palette not supported\n");
+        }
+
+        totalicons = 0;
+        ctable = cicondata;
+        for (;;)
+        {
+            if ((char *)ctable >= fileend)
+                error("invalid coloricon table", inrsc);
+            offset = get_offset(ctable++);
+            if (offset == 0xFFFFFFFFUL)
+                break;
+            totalicons++;
+        }
+
+        /*
+         * the CICONBLK structures immediately follow the table
+         */
+        ptr = (CICONBLK *)ctable;
+        fixup_cicons(base, ptr, totalicons, cicondata);
+    }
 }
 
 /*
@@ -1313,6 +1519,8 @@ char *basename;
         return -1;
     if (write_iconblk(fp))
         return -1;
+    if (write_ciconblk(fp))
+        return -1;
     if (write_bitblk(fp))
         return -1;
     if (write_object(fp))
@@ -1461,41 +1669,82 @@ short old_tree = -1;
      && (rsh.ntree == conditional_tree_start)
      && (rsh.nted == conditional_tedinfo_start)
      && (rsh.nib == conditional_iconblk_start)
+     && (rsh.num_ciconblks == conditional_ciconblk_start)
      && (rsh.nbb == conditional_bitblk_start)) {
         fprintf(fp,"#define %-16s%d\n","RS_NOBS",rsh.nobs);
         fprintf(fp,"#define %-16s%d\n","RS_NTREE",rsh.ntree);
         fprintf(fp,"#define %-16s%d\n","RS_NTED",rsh.nted);
-        fprintf(fp,"#define %-16s%d\n","RS_NIB",rsh.nib);
-        fprintf(fp,"#define %-16s%d\n\n\n","RS_NBB",rsh.nbb);
+        fprintf(fp,"#define %-16s%d\n","RS_NBB",rsh.nbb);
     } else {
         fprintf(fp,"%s\n",other_cond.string);
         fprintf(fp,"#define %-16s%d\n","RS_NOBS",rsh.nobs);
         fprintf(fp,"#define %-16s%d\n","RS_NTREE",rsh.ntree);
         fprintf(fp,"#define %-16s%d\n","RS_NTED",rsh.nted);
-        fprintf(fp,"#define %-16s%d\n","RS_NIB",rsh.nib);
         fprintf(fp,"#define %-16s%d\n","RS_NBB",rsh.nbb);
         fprintf(fp,"#else\n");
         fprintf(fp,"#define %-16s%d\n","RS_NOBS",conditional_object_start);
         fprintf(fp,"#define %-16s%d\n","RS_NTREE",conditional_tree_start);
         fprintf(fp,"#define %-16s%d\n","RS_NTED",conditional_tedinfo_start);
-        fprintf(fp,"#define %-16s%d\n","RS_NIB",conditional_iconblk_start);
         fprintf(fp,"#define %-16s%d\n","RS_NBB",conditional_bitblk_start);
-        fprintf(fp,"#endif\n\n\n");
+        fprintf(fp,"#endif\n");
     }
 #else
     if (rsh.nobs == conditional_object_start) {
         fprintf(fp,"#define %sRS_NOBS %d\n",prefix,rsh.nobs);
-        fprintf(fp,"#define %sRS_NIB  %d\n",prefix,rsh.nib);
     } else {
         fprintf(fp,"%s\n",other_cond.string);
         fprintf(fp,"#define %sRS_NOBS %d\n",prefix,rsh.nobs);
-        fprintf(fp,"#define %sRS_NIB  %d\n",prefix,rsh.nib);
         fprintf(fp,"#else\n");
         fprintf(fp,"#define %sRS_NOBS %d\n",prefix,conditional_object_start);
-        fprintf(fp,"#define %sRS_NIB  %d\n",prefix,conditional_iconblk_start);
-        fprintf(fp,"#endif\n\n\n");
+        fprintf(fp,"#endif\n");
     }
 #endif
+
+    if ((rsh.nobs == conditional_object_start)
+     && (rsh.ntree == conditional_tree_start)
+     && (rsh.nted == conditional_tedinfo_start)
+     && (rsh.nib == conditional_iconblk_start)
+     && (rsh.num_ciconblks == conditional_ciconblk_start)
+     && (rsh.nbb == conditional_bitblk_start)) {
+        fprintf(fp,"#if CONF_WITH_BUILTIN_COLORICONS\n");
+        fprintf(fp,"#define %sRS_NIB       %d\n", prefix, rsh.nib);
+        fprintf(fp,"#define %sRS_IB_OFFSET %d\n", prefix, rsh.nib);
+        fprintf(fp,"#define %sRS_NCIB      %d\n", prefix, rsh.num_ciconblks);
+        fprintf(fp,"#define %sRS_NCIC      %d\n", prefix, rsh.num_cicons);
+        fprintf(fp,"#else\n");
+        fprintf(fp,"#define %sRS_NIB       %d\n", prefix, rsh.nib + rsh.num_ciconblks);
+        fprintf(fp,"#define %sRS_IB_OFFSET %d\n", prefix, rsh.nib);
+        fprintf(fp,"#define %sRS_NCIB      %d\n", prefix, 0);
+        fprintf(fp,"#define %sRS_NCIC      %d\n", prefix, 0);
+        fprintf(fp,"#endif\n");
+    } else {
+        fprintf(fp,"%s\n",other_cond.string);
+        fprintf(fp,"#if CONF_WITH_BUILTIN_COLORICONS\n");
+        fprintf(fp,"#define %sRS_NIB       %d\n", prefix, rsh.nib);
+        fprintf(fp,"#define %sRS_IB_OFFSET %d\n", prefix, rsh.nib);
+        fprintf(fp,"#define %sRS_NCIB      %d\n", prefix, rsh.num_ciconblks);
+        fprintf(fp,"#define %sRS_NCIC      %d\n", prefix, rsh.num_cicons);
+        fprintf(fp,"#else\n");
+        fprintf(fp,"#define %sRS_NIB       %d\n", prefix, rsh.nib + rsh.num_ciconblks);
+        fprintf(fp,"#define %sRS_IB_OFFSET %d\n", prefix, rsh.nib);
+        fprintf(fp,"#define %sRS_NCIB      %d\n", prefix, 0);
+        fprintf(fp,"#define %sRS_NCIC      %d\n", prefix, 0);
+        fprintf(fp,"#endif\n");
+        fprintf(fp,"#else\n");
+        fprintf(fp,"#if CONF_WITH_BUILTIN_COLORICONS\n");
+        fprintf(fp,"#define %sRS_NIB       %d\n", prefix, conditional_iconblk_start);
+        fprintf(fp,"#define %sRS_IB_OFFSET %d\n", prefix, conditional_iconblk_start);
+        fprintf(fp,"#define %sRS_NCIB      %d\n", prefix, conditional_ciconblk_start);
+        fprintf(fp,"#define %sRS_NCIC      %d\n", prefix, conditional_cicon_start);
+        fprintf(fp,"#else\n");
+        fprintf(fp,"#define %sRS_NIB       %d\n", prefix, conditional_iconblk_start + conditional_ciconblk_start);
+        fprintf(fp,"#define %sRS_IB_OFFSET %d\n", prefix, conditional_iconblk_start);
+        fprintf(fp,"#define %sRS_NCIB      %d\n", prefix, 0);
+        fprintf(fp,"#define %sRS_NCIC      %d\n", prefix, 0);
+        fprintf(fp,"#endif\n");
+        fprintf(fp,"#endif\n");
+    }
+    fprintf(fp,"\n\n");
 
 #ifdef GEM_RSC
     fprintf(fp,"/*\n");
@@ -1515,6 +1764,15 @@ short old_tree = -1;
  */
 PRIVATE int write_h_extern(FILE *fp)
 {
+    fprintf(fp,"/* The following arrays live in RAM */\n");
+    fprintf(fp,"#if CONF_WITH_BUILTIN_COLORICONS && %sRS_NCIB != 0\n", prefix);
+    fprintf(fp,"extern CICONBLK %srs_ciconblk[%sRS_NCIB];\n", prefix, prefix);
+    fprintf(fp,"#if %sRS_NCIC != 0\n", prefix);
+    fprintf(fp,"extern CICON %srs_cicon[%sRS_NCIC];\n", prefix, prefix);
+    fprintf(fp,"#endif\n");
+    fprintf(fp,"#endif\n");
+    fprintf(fp,"\n");
+
 #ifdef DESK_RSC
     fprintf(fp,"extern const BITBLK %srs_bitblk[];\n",prefix);
     fprintf(fp,"extern const char * const %srs_fstr[];\n",prefix);
@@ -1527,8 +1785,8 @@ PRIVATE int write_h_extern(FILE *fp)
 #endif
 #ifdef GEM_RSC
     fprintf(fp,"/* The following arrays live in RAM */\n");
-    fprintf(fp,"extern OBJECT  %srs_obj[];\n",prefix);
-    fprintf(fp,"extern TEDINFO %srs_tedinfo[];\n\n",prefix);
+    fprintf(fp,"extern OBJECT  %srs_obj[];\n", prefix);
+    fprintf(fp,"extern TEDINFO %srs_tedinfo[];\n\n", prefix);
 
     fprintf(fp,"/* This array lives in ROM and points to RAM data */\n");
     fprintf(fp,"extern OBJECT * const %srs_trees[];\n\n",prefix);
@@ -1541,11 +1799,15 @@ PRIVATE int write_h_extern(FILE *fp)
     fprintf(fp,"extern void gem_rsc_fixit(void);\n\n");
 #endif
 #ifdef ICON_RSC
-    fprintf(fp,"#if CONF_WITH_COLORICONS\n");
-    fprintf(fp,"extern const OBJECT %srs_obj[];\n\n",prefix);
+    fprintf(fp,"#if CONF_WITH_COLORICONS || CONF_WITH_BUILTIN_COLORICONS\n");
+    fprintf(fp,"extern const OBJECT %srs_obj[];\n",prefix);
     fprintf(fp,"#else\n");
-    fprintf(fp,"extern const ICONBLK %srs_iconblk[];\n\n",prefix);
+    fprintf(fp,"extern const ICONBLK %srs_iconblk[];\n",prefix);
     fprintf(fp,"#endif\n");
+    fprintf(fp,"#if CONF_WITH_BUILTIN_COLORICONS\n");
+    fprintf(fp,"extern void %srs_init(void);\n",prefix);
+    fprintf(fp,"#endif\n");
+    fprintf(fp,"\n");
 #endif
 
     return ferror(fp) ? -1 : 0;
@@ -1673,70 +1935,117 @@ char *base = (char *)rschdr, *p;
     return ferror(fp) ? -1 : 0;
 }
 
+PRIVATE CICONBLK *get_ciconblk(char *base, int n)
+{
+    OFFSET *offset;
+    CICONBLK *ciconblk;
+
+    offset = (OFFSET *)(base + rsh.offset_cicontable + 4 * n);
+    ciconblk = (CICONBLK *)(base + get_offset(offset));
+    return ciconblk;
+}
+
+
+static int *icon_mmap, *icon_dmap;
+static ICONBLK *alliconblks;
+
+PRIVATE void gen_iconmaps(char *base)
+{
+    int i, j, nib, nic;
+    ICONBLK *iconblk;
+
+    nib = rsh.nib;
+    nic = nib + rsh.num_ciconblks;
+
+    alliconblks = malloc(nic*sizeof(ICONBLK));
+    memcpy(alliconblks, base + rsh.iconblk, nib * sizeof(ICONBLK));
+    for (i = 0; i < rsh.num_ciconblks; i++)
+        alliconblks[nib + i] = get_ciconblk(base, i)->monoblk;
+
+    icon_mmap = malloc(nic*sizeof(int));      /* allocate mapping arrays */
+    icon_dmap = malloc(nic*sizeof(int));
+    for (i = 0; i < nic; i++)
+        icon_mmap[i] = icon_dmap[i] = -1;
+
+    iconblk = alliconblks;
+    for (i = 0; i < nic; i++) {         /* populate mapping arrays */
+        if (icon_mmap[i] < 0) {                  /* not yet mapped */
+            for (j = i+1; j < nic; j++) {
+                if (icon_mmap[j] >= 0)
+                    continue;               /* already mapped */
+                if (compare_mask(iconblk+i,iconblk+j))
+                    continue;               /* different masks */
+                /* dont't map coloricon mask to iconmask that is compiled out */
+                if (j >= nib && i >= conditional_iconblk_start && i < nib)
+                    continue;
+                icon_mmap[j] = i;                /* the same, so map */
+            }
+        }
+        if (icon_dmap[i] < 0) {                  /* not yet mapped */
+            for (j = i+1; j < nic; j++) {
+                if (icon_dmap[j] >= 0)
+                    continue;               /* already mapped */
+                if (compare_data(iconblk+i,iconblk+j))
+                    continue;               /* different masks */
+                /* dont't map coloricon data to iconmask that is compiled out */
+                if (j >= nib && i >= conditional_iconblk_start && i < nib)
+                    continue;
+                icon_dmap[j] = i;                /* the same, so map */
+            }
+        }
+    }
+}
+
 /*
  *  this creates the ICONBLK stuff for the .c file
  */
 PRIVATE int write_iconblk(FILE *fp)
 {
-int i, j, n, nib;
+int i, n, nib, nic;
 short iconchar;
 char temp[MAX_STRLEN];
-int *mmap, *dmap;
 ICONBLK *iconblk;
 char *base = (char *)rschdr;
 int wicon, hicon, w, h;
+int in_cond;
 
     nib = rsh.nib;
-    if (nib == 0)
+    nic = nib + rsh.num_ciconblks;
+    if (nic == 0)
         return 0;
 
-    iconblk = (ICONBLK *)(base + rsh.iconblk);
-
     /*
-     * first we figure out the duplicate icon stuff: if mmap[j]
+     * first we figure out the duplicate icon stuff: if icon_mmap[j]
      * contains i (i not equal to -1), then the jth mask is the
      * same as the ith, and the ith mask is the "master" mask
-     * (and mmap[i] will contain -1).  data areas are treated
-     * the same, using dmap[].
+     * (and icon_mmap[i] will contain -1).  data areas are treated
+     * the same, using icon_dmap[].
      */
-    mmap = malloc(nib*sizeof(int));      /* allocate mapping arrays */
-    dmap = malloc(nib*sizeof(int));
-    for (i = 0; i < nib; i++)
-        mmap[i] = dmap[i] = -1;
-
-    for (i = 0; i < nib; i++) {         /* populate mapping arrays */
-        if (mmap[i] < 0) {                  /* not yet mapped */
-            for (j = i+1; j < nib; j++) {
-                if (mmap[j] >= 0)
-                    continue;               /* already mapped */
-                if (compare_mask(iconblk+i,iconblk+j))
-                    continue;               /* different masks */
-                mmap[j] = i;                /* the same, so map */
-            }
-        }
-        if (dmap[i] < 0) {                  /* not yet mapped */
-            for (j = i+1; j < nib; j++) {
-                if (dmap[j] >= 0)
-                    continue;               /* already mapped */
-                if (compare_data(iconblk+i,iconblk+j))
-                    continue;               /* different masks */
-                dmap[j] = i;                /* the same, so map */
-            }
-        }
-    }
+    gen_iconmaps(base);
 
     /*
      * then we create the actual icon mask/data arrays
      */
     wicon = hicon = 0;
-    for (i = 0; i < nib; i++, iconblk++) {
+    in_cond = 0;
+    for (i = 0, iconblk = alliconblks; i < nic; i++, iconblk++) {
         w = get_short(&iconblk->ib_wicon);
         h = get_short(&iconblk->ib_hicon);
 #ifdef ICON_RSC
         if (i != 0 && w != wicon)
-            fprintf(stderr, "error: width %d of icon %d is different than width %d\n", w, i, wicon);
+        {
+            if (i >= nib)
+                fprintf(stderr, "error: width %d of coloricon %d is different than width %d\n", w, i - nib, wicon);
+            else
+                fprintf(stderr, "error: width %d of icon %d is different than width %d\n", w, i, wicon);
+        }
         if (i != 0 && h != hicon)
-            fprintf(stderr, "error: height %d of icon %d is different than height %d\n", h, i, hicon);
+        {
+            if (i >= nib)
+                fprintf(stderr, "error: height %d of coloricon %d is different than height %d\n", h, i - nib, hicon);
+            else
+                fprintf(stderr, "error: height %d of icon %d is different than height %d\n", h, i, hicon);
+        }
         if (i != 0 && (w != wicon || h != hicon))
             error("mismatch in icon dimensions", NULL);
 #endif
@@ -1746,31 +2055,105 @@ int wicon, hicon, w, h;
             hicon = h;
         }
         if (i == conditional_iconblk_start)
+        {
             fprintf(fp,"%s\n",other_cond.string);
-        if (mmap[i] < 0) {      /* only create icon mask for an "unmapped" icon */
-            n = h * w / 16;
+            in_cond = 1;
+        }
+        if (i == nib)
+        {
+            if (in_cond)
+                fprintf(fp,"#endif\n");
+            in_cond = 0;
+        }
+        if (!in_cond && i == nib + conditional_ciconblk_start)
+        {
+            fprintf(fp,"%s\n",other_cond.string);
+            in_cond = 1;
+        }
+        if (icon_mmap[i] < 0) {      /* only create icon mask for an "unmapped" icon */
+            n = calc_planesize(w, h) / 2;
+            if (i >= nib)
+                fprintf(fp, "/* icon mask of color icon #%d '%s' */\n", i - nib, base + get_offset(&iconblk->ib_ptext));
+            else
+                fprintf(fp, "/* icon mask of icon #%d '%s' */\n", i, base + get_offset(&iconblk->ib_ptext));
             fprintf(fp,"static const WORD rs_iconmask%d[] = {\n",i);    /* output mask */
             write_data(fp,n,(USHORT *)(base+get_offset(&iconblk->ib_pmask)));
             fprintf(fp,"};\n\n");
+        } else
+        {
+            if (i >= nib)
+            {
+                if (icon_mmap[i] >= nib)
+                    fprintf(fp, "/* icon mask of color icon #%d '%s' omitted; identical to coloricon #%d '%s' */\n\n",
+                        i - nib, base + get_offset(&alliconblks[i].ib_ptext),
+                        icon_mmap[i] - nib, base + get_offset(&alliconblks[icon_mmap[i]].ib_ptext));
+                else
+                    fprintf(fp, "/* icon mask of color icon #%d '%s' omitted; identical to monochrome icon #%d '%s' */\n\n",
+                        i - nib, base + get_offset(&alliconblks[i].ib_ptext),
+                        icon_mmap[i], base + get_offset(&alliconblks[icon_mmap[i]].ib_ptext));
+            } else
+            {
+                fprintf(fp, "/* icon mask of icon #%d '%s' omitted; identical to #%d '%s' */\n\n",
+                    i, base + get_offset(&alliconblks[i].ib_ptext),
+                    icon_mmap[i], base + get_offset(&alliconblks[icon_mmap[i]].ib_ptext));
+            }
         }
-        if (dmap[i] < 0) {      /* only create icon data for an "unmapped" icon */
-            n = h * w / 16;
+        if (icon_dmap[i] < 0) {      /* only create icon data for an "unmapped" icon */
+            if (i >= nib)
+                fprintf(fp, "/* icon data of color icon #%d '%s' */\n", i - nib, base + get_offset(&iconblk->ib_ptext));
+            else
+                fprintf(fp, "/* icon data of icon #%d '%s' */\n", i, base + get_offset(&iconblk->ib_ptext));
+            n = calc_planesize(w, h) / 2;
             fprintf(fp,"static const WORD rs_icondata%d[] = {\n",i);    /* output data */
             write_data(fp,n,(USHORT *)(base+get_offset(&iconblk->ib_pdata)));
             fprintf(fp,"};\n\n");
+        } else
+        {
+            if (i >= nib)
+            {
+                if (icon_dmap[i] >= nib)
+                    fprintf(fp, "/* icon data of color icon #%d '%s' omitted; identical to coloricon #%d '%s' */\n\n",
+                        i - nib, base + get_offset(&alliconblks[i].ib_ptext),
+                        icon_dmap[i] - nib, base + get_offset(&alliconblks[icon_dmap[i]].ib_ptext));
+                else
+                    fprintf(fp, "/* icon data of color icon #%d '%s' omitted; identical to monochrome icon #%d '%s' */\n\n",
+                        i - nib, base + get_offset(&alliconblks[i].ib_ptext),
+                        icon_dmap[i], base + get_offset(&alliconblks[icon_dmap[i]].ib_ptext));
+            } else
+            {
+                fprintf(fp, "/* icon data of icon #%d '%s' omitted; identical to #%d '%s' */\n\n",
+                    i, base + get_offset(&alliconblks[i].ib_ptext),
+                    icon_dmap[i], base + get_offset(&alliconblks[icon_dmap[i]].ib_ptext));
+            }
         }
     }
-    if (conditional_iconblk_start < nib)
+    if (in_cond)
         fprintf(fp,"#endif\n");
+    fprintf(fp,"\n\n");
 
     /*
      * finally we create the array of ICONBLKs with pointers to mask/data
      */
     fprintf(fp,"const ICONBLK %srs_iconblk[] = {\n",prefix);
-    iconblk = (ICONBLK *)(base + rsh.iconblk);
-    for (i = 0; i < nib; i++, iconblk++) {
+    in_cond = 0;
+    for (i = 0, iconblk = alliconblks; i < nic; i++, iconblk++) {
         if (i == conditional_iconblk_start)
+        {
             fprintf(fp,"\n%s\n",other_cond.string);
+            in_cond = 1;
+        }
+        if (i == nib)
+        {
+            if (in_cond)
+                fprintf(fp,"#endif\n");
+            in_cond = 0;
+            fprintf(fp, "#if !CONF_WITH_BUILTIN_COLORICONS\n");
+        }
+        if (!in_cond && i == nib + conditional_ciconblk_start)
+        {
+            fprintf(fp,"%s\n",other_cond.string);
+            in_cond = 1;
+        }
         iconchar = get_short(&iconblk->ib_char);
 #ifdef ICON_RSC
         temp[0] = '\0';     /* no string generation for ICONBLKs */
@@ -1778,7 +2161,7 @@ int wicon, hicon, w, h;
         copyfix(temp,base+get_offset(&iconblk->ib_ptext),MAX_STRLEN-1);
 #endif
         fprintf(fp,"    { (WORD *)rs_iconmask%d, (WORD *)rs_icondata%d, \"%s\", %s,\n",
-                (mmap[i]==-1)?i:mmap[i],(dmap[i]==-1)?i:dmap[i],
+                (icon_mmap[i]==-1)?i:icon_mmap[i],(icon_dmap[i]==-1)?i:icon_dmap[i],
                 temp,decode_ib_char(iconchar));
         fprintf(fp,"      %d, %d, %d, %d, %d, %d, %d, %d, %d, %d },\n",
                 get_short(&iconblk->ib_xchar),get_short(&iconblk->ib_ychar),
@@ -1787,14 +2170,215 @@ int wicon, hicon, w, h;
                 get_short(&iconblk->ib_xtext),get_short(&iconblk->ib_ytext),
                 get_short(&iconblk->ib_wtext),get_short(&iconblk->ib_htext));
     }
-    if (conditional_iconblk_start < nib)
+    if (in_cond)
         fprintf(fp,"#endif\n");
+    if (rsh.num_ciconblks != 0)
+        fprintf(fp,"#endif\n");
+
     fprintf(fp,"};\n");
 
     fprintf(fp,"\n\n");
 
-    free(mmap);
-    free(dmap);
+    return ferror(fp) ? -1 : 0;
+}
+
+/*
+ *  this creates the CICONBLK stuff for the .c file
+ */
+PRIVATE int write_ciconblk(FILE *fp)
+{
+int i, n, nib, nic, ciconnum, ciconidx, mono_size, color_size;
+short iconchar;
+char temp[MAX_STRLEN];
+CICONBLK *ciconblk;
+unsigned int res;
+char *base = (char *)rschdr;
+int w, h;
+int in_cond;
+char seldataname[MAX_STRLEN], selmaskname[MAX_STRLEN];
+char next_res[MAX_STRLEN];
+
+    nic = rsh.num_ciconblks;
+    nib = rsh.nib;
+
+    if (nic == 0)
+        return 0;
+
+    fprintf(fp,"#if CONF_WITH_BUILTIN_COLORICONS\n");
+
+    /*
+     * create the color icon mask/data arrays
+     */
+    in_cond = 0;
+    rsh.size_colordata_4[0] = rsh.size_colordata_4[1] = 0;
+    rsh.size_colordata_8[0] = rsh.size_colordata_8[1] = 0;
+    rsh.size_selmask[0] = rsh.size_selmask[1] = 0;
+    for (i = 0, ciconnum = 0, ciconidx = 0; i < nic; i++) {
+        ciconblk = get_ciconblk(base, i);
+        w = get_short(&ciconblk->monoblk.ib_wicon);
+        h = get_short(&ciconblk->monoblk.ib_hicon);
+        mono_size = calc_planesize(w, h);
+        rsh.size_monomask = mono_size;
+        n = mono_size / 2;
+        if (ciconidx == conditional_cicon_start)
+        {
+            fprintf(fp,"%s\n",other_cond.string);
+            in_cond = 1;
+        }
+        res = get_offset(&ciconblk->mainlist);
+        while (res != 0)
+        {
+            CICON *cicon = (CICON *)(base + res);
+            short planes = get_short(&cicon->num_planes);
+            fprintf(fp,"static const WORD rs_coldata%d[] = {\n",ciconnum++);    /* output data */
+            write_data(fp,n*planes,(USHORT *)(base+get_offset(&cicon->col_data)));
+            fprintf(fp,"};\n\n");
+            fprintf(fp,"static const WORD rs_colmask%d[] = {\n",ciconnum++);    /* output mask */
+            write_data(fp,n,(USHORT *)(base+get_offset(&cicon->col_mask)));
+            fprintf(fp,"};\n\n");
+            color_size = mono_size * planes;
+            if (planes > 1)
+            {
+                if (planes == 4)
+                    rsh.size_colordata_4[in_cond] += mono_size + color_size;
+                else if (planes == 8)
+                    rsh.size_colordata_8[in_cond] += mono_size + color_size;
+            }
+            res = get_offset(&cicon->sel_data);
+            if (res)
+            {
+                fprintf(fp,"static const WORD rs_seldata%d[] = {\n",ciconnum++);    /* output data */
+                write_data(fp,n*planes,(USHORT *)(base+get_offset(&cicon->col_data)));
+                fprintf(fp,"};\n\n");
+                fprintf(fp,"static const WORD rs_selmask%d[] = {\n",ciconnum++);    /* output mask */
+                write_data(fp,n,(USHORT *)(base+get_offset(&cicon->col_mask)));
+                fprintf(fp,"};\n\n");
+                if (planes > 1)
+                {
+                    if (planes == 4)
+                        rsh.size_colordata_4[in_cond] += mono_size + color_size;
+                    else if (planes == 8)
+                        rsh.size_colordata_8[in_cond] += mono_size + color_size;
+                }
+            } else
+            {
+                rsh.size_selmask[in_cond] += mono_size;
+            }
+            res = get_offset(&cicon->next_res);
+            ciconidx++;
+        }
+    }
+    if (in_cond)
+        fprintf(fp,"#endif\n");
+    fprintf(fp,"\n\n");
+
+    /*
+     * create the array of CICONs
+     */
+    fprintf(fp,"#if EMUTOS_LIVES_IN_RAM\n");
+    fprintf(fp,"CICON %srs_cicon[] = {\n",prefix);
+    fprintf(fp,"#else\n");
+    fprintf(fp,"static const CICON %srs_cicon_rom[] = {\n",prefix);
+    fprintf(fp,"#endif\n");
+    in_cond = 0;
+    for (i = 0, ciconnum = 0, ciconidx = 0; i < nic; i++) {
+        ciconblk = get_ciconblk(base, i);
+        if (ciconidx == conditional_cicon_start)
+        {
+            fprintf(fp,"%s\n",other_cond.string);
+            in_cond = 1;
+        }
+        res = get_offset(&ciconblk->mainlist);
+        while (res != 0)
+        {
+            CICON *cicon = (CICON *)(base + res);
+            short planes = get_short(&cicon->num_planes);
+            res = get_offset(&cicon->sel_data);
+            fprintf(fp,"    { %d, (WORD *)rs_coldata%d, (WORD *)rs_colmask%d, ",
+                 planes, ciconnum + 0, ciconnum + 1);
+            ciconnum += 2;
+            if (res)
+            {
+                sprintf(seldataname, "(WORD *)rs_seldata%d", ciconnum + 0);
+                sprintf(selmaskname, "(WORD *)rs_selmask%d", ciconnum + 1);
+                ciconnum += 2;
+            } else
+            {
+                strcpy(seldataname, "NULL");
+                strcpy(selmaskname, "NULL");
+            }
+            res = get_offset(&cicon->next_res);
+            ciconidx++;
+            if (res)
+            {
+                sprintf(next_res, "&%srs_cicon[%d]", prefix, ciconidx);
+            } else
+            {
+                strcpy(next_res, "NULL");
+            }
+            fprintf(fp,"    %s, %s, %s },\n", seldataname, selmaskname, next_res);
+        }
+    }
+    if (in_cond)
+        fprintf(fp,"#endif\n");
+    fprintf(fp,"};\n");
+    fprintf(fp,"\n\n");
+
+    /*
+     * finally we create the array of CICONBLKs with pointers to CICONs
+     */
+    fprintf(fp,"#if EMUTOS_LIVES_IN_RAM\n");
+    fprintf(fp,"CICONBLK %srs_ciconblk[] = {\n",prefix);
+    fprintf(fp,"#else\n");
+    fprintf(fp,"static const CICONBLK %srs_ciconblk_rom[] = {\n",prefix);
+    fprintf(fp,"#endif\n");
+    in_cond = 0;
+    for (i = 0, ciconnum = 0, ciconidx = 0; i < nic; i++) {
+        ciconblk = get_ciconblk(base, i);
+        if (i == conditional_ciconblk_start)
+        {
+            fprintf(fp,"\n%s\n",other_cond.string);
+            in_cond = 1;
+        }
+        res = get_offset(&ciconblk->mainlist);
+        if (res)
+        {
+            sprintf(next_res, "&%srs_cicon[%d]", prefix, ciconidx);
+            while (res != 0)
+            {
+                CICON *cicon = (CICON *)(base + res);
+                ciconidx++;
+                res = get_offset(&cicon->next_res);
+            }
+        } else
+        {
+            strcpy(next_res, "NULL");
+        }
+        iconchar = get_short(&ciconblk->monoblk.ib_char);
+#ifdef ICON_RSC
+        temp[0] = '\0';     /* no string generation for ICONBLKs */
+#else
+        copyfix(temp,base+get_offset(&ciconblk->monoblk.ib_ptext),MAX_STRLEN-1);
+#endif
+        fprintf(fp,"    { { (WORD *)rs_iconmask%d, (WORD *)rs_icondata%d, \"%s\", %s,\n",
+                (icon_mmap[nib + i]==-1) ? nib + i : icon_mmap[nib + i],
+                (icon_dmap[nib + i]==-1) ? nib + i : icon_dmap[nib + i],
+                temp,decode_ib_char(iconchar));
+        fprintf(fp,"      %d, %d, %d, %d, %d, %d, %d, %d, %d, %d }, %s },\n",
+                get_short(&ciconblk->monoblk.ib_xchar),get_short(&ciconblk->monoblk.ib_ychar),
+                get_short(&ciconblk->monoblk.ib_xicon),get_short(&ciconblk->monoblk.ib_yicon),
+                get_short(&ciconblk->monoblk.ib_wicon),get_short(&ciconblk->monoblk.ib_hicon),
+                get_short(&ciconblk->monoblk.ib_xtext),get_short(&ciconblk->monoblk.ib_ytext),
+                get_short(&ciconblk->monoblk.ib_wtext),get_short(&ciconblk->monoblk.ib_htext),
+                next_res);
+    }
+    if (in_cond)
+        fprintf(fp,"#endif\n");
+    fprintf(fp,"};\n");
+
+    fprintf(fp,"#endif /* CONF_WITH_BUILTIN_COLORICONS */\n");
+
+    fprintf(fp,"\n\n");
 
     return ferror(fp) ? -1 : 0;
 }
@@ -1895,11 +2479,18 @@ short filebox = -1;
     if (!generate_objects)
         return 0;
 
+    fprintf(fp,"#if CONF_WITH_BUILTIN_COLORICONS\n");
+    fprintf(fp,"# define G_BUILTIN_CICON G_CICON\n");
+    fprintf(fp,"#else\n");
+    fprintf(fp,"# define G_BUILTIN_CICON G_ICON\n");
+    fprintf(fp,"#endif\n");
+    fprintf(fp,"\n");
+
 #ifdef ICON_RSC
-    fprintf(fp, "#if %sRS_NIB != BUILTIN_IBLKS\n", prefix);
+    fprintf(fp, "#if (%sRS_NIB+%sRS_NCIB) != BUILTIN_IBLKS\n", prefix, prefix);
     fprintf(fp, "# error \"BUILTIN_IBLKS needs to be adjusted\"\n");
     fprintf(fp, "#endif\n\n");
-    fprintf(fp,"#if CONF_WITH_COLORICONS\n");
+    fprintf(fp,"#if CONF_WITH_COLORICONS || CONF_WITH_BUILTIN_COLORICONS\n");
     fprintf(fp,"const OBJECT %srs_obj[%sRS_NOBS] = {\n",prefix,prefix);
 #else
     fprintf(fp,"OBJECT %srs_obj[RS_NOBS];\n\n",prefix);
@@ -2044,11 +2635,13 @@ short filebox = -1;
     if (!first_time)
         fprintf(fp,"#endif\n");
 
-    fprintf(fp,"};\n\n\n");
+    fprintf(fp,"};\n");
 
 #ifdef ICON_RSC
-    fprintf(fp,"#endif\n");
+    fprintf(fp,"#endif /* CONF_WITH_BUILTIN_COLORICONS */\n");
 #endif
+    fprintf(fp,"\n\n");
+
     return ferror(fp) ? -1 : 0;
 }
 
@@ -2153,6 +2746,27 @@ char *base = (char *)rschdr;
  */
 PRIVATE int write_c_epilogue(FILE *fp)
 {
+    fprintf(fp,"#if CONF_WITH_BUILTIN_COLORICONS && %sRS_NCIB != 0 && !EMUTOS_LIVES_IN_RAM\n", prefix);
+    fprintf(fp,"CICONBLK %srs_ciconblk[%sRS_NCIB];\n", prefix, prefix);
+    fprintf(fp,"#if %sRS_NCIC != 0\n", prefix);
+    fprintf(fp,"CICON %srs_cicon[%sRS_NCIC];\n", prefix, prefix);
+    fprintf(fp,"#endif\n");
+    fprintf(fp,"#endif\n");
+    fprintf(fp,"\n\n");
+    fprintf(fp,"#if CONF_WITH_BUILTIN_COLORICONS && %sRS_NCIB != 0\n", prefix);
+    fprintf(fp,"#include \"verify.h\"\n");
+    fprintf(fp,"#include \"gemdos.h\"\n");
+    fprintf(fp,"#include \"kprint.h\"\n");
+    fprintf(fp,"#include \"../aes/gemgraf.h\"\n");
+    fprintf(fp,"#if !EMUTOS_LIVES_IN_RAM\n");
+    fprintf(fp,"verify(sizeof(%srs_ciconblk) == sizeof(%srs_ciconblk_rom));\n", prefix, prefix);
+    fprintf(fp,"#if %sRS_NCIC != 0\n", prefix);
+    fprintf(fp,"verify(sizeof(%srs_cicon) == sizeof(%srs_cicon_rom));\n", prefix, prefix);
+    fprintf(fp,"#endif\n");
+    fprintf(fp,"#endif\n");
+    fprintf(fp,"#endif\n");
+    fprintf(fp,"\n");
+
 #ifdef DESK_RSC
     fprintf(fp,"void %srs_init(void)\n",prefix);
     fprintf(fp,"{\n");
@@ -2198,6 +2812,96 @@ PRIVATE int write_c_epilogue(FILE *fp)
     fprintf(fp,"    for (i = 0, p = tree+BUTOFF; i < MAX_BUTNUM; i++, p++)\n");
     fprintf(fp,"        p->ob_spec.free_string = msg_but[i];\n");
     fprintf(fp,"}\n");
+#endif
+#ifdef ICON_RSC
+    fprintf(fp,"#if CONF_WITH_BUILTIN_COLORICONS && %sRS_NCIB != 0\n", prefix);
+    fprintf(fp,"\n");
+    fprintf(fp,"#define %sSIZE_MONOMASK   %luUL\n", prefix, rsh.size_monomask);
+    fprintf(fp,"#define %sSIZE_COLORMASK4 (%sSIZE_MONOMASK * 4)\n", prefix, prefix);
+    fprintf(fp,"#define %sSIZE_COLORMASK8 (%sSIZE_MONOMASK * 4)\n", prefix, prefix);
+    fprintf(fp,"%s\n", *other_cond.start == '?' ? "#if 1" : other_cond.string);
+    fprintf(fp,"#define %sSIZE_COLORDATA4 %luUL\n", prefix, rsh.size_colordata_4[0] + rsh.size_colordata_4[1]);
+    fprintf(fp,"#define %sSIZE_COLORDATA8 %luUL\n", prefix, rsh.size_colordata_8[0] + rsh.size_colordata_8[1]);
+    fprintf(fp,"#define %sSIZE_SELMASK    %luUL\n", prefix, rsh.size_selmask[0] + rsh.size_selmask[1]);
+    fprintf(fp,"#else\n");
+    fprintf(fp,"#define %sSIZE_COLORDATA4 %luUL\n", prefix, rsh.size_colordata_4[0]);
+    fprintf(fp,"#define %sSIZE_COLORDATA8 %luUL\n", prefix, rsh.size_colordata_8[0]);
+    fprintf(fp,"#define %sSIZE_SELMASK    %luUL\n", prefix, rsh.size_selmask[0]);
+    fprintf(fp,"#endif\n");
+    fprintf(fp,"\n");
+    fprintf(fp,"/*\n");
+    fprintf(fp," * Copy coloricon structures to RAM, and allocate memory\n");
+    fprintf(fp," * for the transformed data.  This must be in sync with the logic\n");
+    fprintf(fp," * of allocations in xfix_cicon():\n");
+    fprintf(fp," * - monochrome data is not transformed, so no allocation needed\n");
+    fprintf(fp," * - if current resolution > planes of icon, xfix_cicon() will\n");
+    fprintf(fp," *   allocate memory for the larger structure, so no need to\n");
+    fprintf(fp," *   allocate memory here\n");
+    fprintf(fp," * - current resolution == planes of icon, transformation is done\n");
+    fprintf(fp," *   in-place (by copying the data back to the source),\n");
+    fprintf(fp," *   so we need to allocate memory here if EmuTOS not already in RAM\n");
+    fprintf(fp," */\n");
+    fprintf(fp,"\n");
+    fprintf(fp,"void %srs_init(void)\n", prefix);
+    fprintf(fp,"{\n");
+    fprintf(fp, "    int i;\n");
+    fprintf(fp, "    CICONBLK *ciconblk;\n");
+    fprintf(fp,"#if !EMUTOS_LIVES_IN_RAM\n");
+    fprintf(fp, "    CICON *cicon;\n");
+    fprintf(fp, "    char *mem;\n");
+    fprintf(fp, "    char *p;\n");
+    fprintf(fp, "    LONG memsize;\n");
+    fprintf(fp, "\n");
+    fprintf(fp, "    /* Copy data from ROM to RAM: */\n");
+    fprintf(fp, "    memcpy(%srs_ciconblk, %srs_ciconblk_rom, sizeof(%srs_ciconblk));\n", prefix, prefix, prefix);
+    fprintf(fp, "#if %sRS_NCIC != 0\n", prefix);
+    fprintf(fp, "    memcpy(%srs_cicon, %srs_cicon_rom, sizeof(%srs_cicon));\n", prefix, prefix, prefix);
+    fprintf(fp, "#endif\n");
+    fprintf(fp, "    if (gl_nplanes >= 4)\n");
+    fprintf(fp, "    {\n");
+    fprintf(fp, "        memsize =\n");
+    fprintf(fp, "#if %sSIZE_COLORDATA8 != 0\n", prefix);
+    fprintf(fp, "            gl_nplanes == 8 ? %sSIZE_COLORDATA8 :\n", prefix);
+    fprintf(fp, "#endif\n");
+    fprintf(fp, "#if %sSIZE_COLORDATA4 != 0\n", prefix);
+    fprintf(fp, "            gl_nplanes == 4 ? %sSIZE_COLORDATA4 :\n", prefix);
+    fprintf(fp, "#endif\n");
+    fprintf(fp, "            0;\n");
+    fprintf(fp, "        mem = p = dos_alloc_anyram(memsize);\n");
+    fprintf(fp, "        for (i = 0, ciconblk = %srs_ciconblk; i < %sRS_NCIB; i++, ciconblk++)\n", prefix, prefix);
+    fprintf(fp, "        {\n");
+    fprintf(fp, "            for (cicon = ciconblk->mainlist; cicon; cicon = cicon->next_res)\n");
+    fprintf(fp, "            {\n");
+    fprintf(fp, "                if (cicon->num_planes == gl_nplanes)\n");
+    fprintf(fp, "                {\n");
+    fprintf(fp, "                    memcpy(p, cicon->col_data, cicon->num_planes == 4 ? %sSIZE_COLORMASK4 : %sSIZE_COLORMASK8);\n", prefix, prefix);
+    fprintf(fp, "                    cicon->col_data = (WORD *)p;\n");
+    fprintf(fp, "                    p += cicon->num_planes == 4 ? %sSIZE_COLORMASK4 : %sSIZE_COLORMASK8;\n", prefix, prefix);
+    fprintf(fp, "                    memcpy(p, cicon->col_mask, %sSIZE_MONOMASK);\n", prefix);
+    fprintf(fp, "                    cicon->col_mask = (WORD *)p;\n");
+    fprintf(fp, "                    p += %sSIZE_MONOMASK;\n", prefix);
+    fprintf(fp, "                    if (cicon->sel_data)\n");
+    fprintf(fp, "                    {\n");
+    fprintf(fp, "                        memcpy(p, cicon->sel_data, cicon->num_planes == 4 ? %sSIZE_COLORMASK4 : %sSIZE_COLORMASK8);\n", prefix, prefix);
+    fprintf(fp, "                        cicon->sel_data = (WORD *)p;\n");
+    fprintf(fp, "                        p += cicon->num_planes == 4 ? %sSIZE_COLORMASK4 : %sSIZE_COLORMASK8;\n", prefix, prefix);
+    fprintf(fp, "                        memcpy(p, cicon->sel_mask, %sSIZE_MONOMASK);\n", prefix);
+    fprintf(fp, "                        cicon->sel_mask = (WORD *)p;\n");
+    fprintf(fp, "                        p += %sSIZE_MONOMASK;\n", prefix);
+    fprintf(fp, "                    }\n");
+    fprintf(fp, "                }\n");
+    fprintf(fp, "            }\n");
+    fprintf(fp, "        }\n");
+    fprintf(fp, "        assert(p == (mem + memsize));\n");
+    fprintf(fp, "        MAYBE_UNUSED(mem);\n");
+    fprintf(fp, "    }\n");
+    fprintf(fp, "#endif\n");
+    fprintf(fp, "\n");
+    fprintf(fp, "    /* convert the color icon data */\n");
+    fprintf(fp, "    for (i = 0, ciconblk = %srs_ciconblk; i < %sRS_NCIB; i++, ciconblk++)\n", prefix, prefix);
+    fprintf(fp, "        fix_coloricon_data(ciconblk);\n");
+    fprintf(fp,"}\n");
+    fprintf(fp,"#endif\n");
 #endif
 
     return ferror(fp) ? -1 : 0;
@@ -2522,16 +3226,15 @@ char *base = (char *)rschdr;
     {
         fprintf(fp,"#if %s\n", conditional);
     }
-    fprintf(fp,"     ");
 
     type = get_ushort(&obj->ob_type) & 0xff;
     switch(type) {
     case G_BOX:
     case G_IBOX:
-        fprintf(fp,"{ %ldL },\n",get_offset(&obj->ob_spec));
+        fprintf(fp,"     { %ldL },\n",get_offset(&obj->ob_spec));
         break;
     case G_BOXCHAR:
-        fprintf(fp,"{ 0x%08lxL },\n",get_offset(&obj->ob_spec));
+        fprintf(fp,"     { 0x%08lxL },\n",get_offset(&obj->ob_spec));
         break;
     case G_STRING:
     case G_BUTTON:
@@ -2539,7 +3242,7 @@ char *base = (char *)rschdr;
         p = base + get_offset(&obj->ob_spec);
         if (isshared(p)) {
             fixshared(temp,p);
-            fprintf(fp,"{ (LONG)rs_str_%s },\n",temp);
+            fprintf(fp,"     { (LONG)rs_str_%s },\n",temp);
             break;
         }
         xlate = copycheck(temp,p,MAX_STRLEN-1);
@@ -2548,34 +3251,39 @@ char *base = (char *)rschdr;
         if (all_dashes(temp) && !notranslate(temp))     /* handle menu separators */
             xlate = 1;
         if (xlate == 0)
-            fprintf(fp,"{ (LONG)\"%s\" },\n",temp);
-        else fprintf(fp,"{ (LONG)%s\"%s\") },\n",NLS,temp);
+            fprintf(fp,"     { (LONG)\"%s\" },\n",temp);
+        else fprintf(fp,"     { (LONG)%s\"%s\") },\n",NLS,temp);
         break;
     case G_TEXT:
     case G_BOXTEXT:
     case G_FTEXT:
     case G_FBOXTEXT:
-        fprintf(fp,"{ (LONG)&%srs_tedinfo[%ld] },\n",prefix,
+        fprintf(fp,"     { (LONG)&%srs_tedinfo[%ld] },\n",prefix,
             (get_offset(&obj->ob_spec)-rsh.tedinfo)/sizeof(TEDINFO));
         break;
     case G_IMAGE:
-        fprintf(fp,"{ (LONG)&%srs_bitblk[%ld] },\n",prefix,
+        fprintf(fp,"     { (LONG)&%srs_bitblk[%ld] },\n",prefix,
             (get_offset(&obj->ob_spec)-rsh.bitblk)/sizeof(BITBLK));
         break;
     case G_PROGDEF:
-        fprintf(fp,"%ldL, /* generate number for unsupported PROGDEF ob_type */\n",
+        fprintf(fp,"     { %ldL }, /* generate number for unsupported PROGDEF ob_type */\n",
                 get_offset(&obj->ob_spec));
         break;
     case G_ICON:
-        fprintf(fp,"{ (LONG)&%srs_iconblk[%ld] },\n",prefix,
+        fprintf(fp,"     { (LONG)&%srs_iconblk[%ld] },\n",prefix,
             (get_offset(&obj->ob_spec)-rsh.iconblk)/sizeof(ICONBLK));
         break;
     case G_CICON:
-        fprintf(fp,"{ %ldL }, /* generate number for unsupported CICONBLK ob_type */\n",
+        fprintf(fp, "#if CONF_WITH_BUILTIN_COLORICONS\n");
+        fprintf(fp,"     { (LONG)&%srs_ciconblk[%ld] },\n",prefix,
                 get_offset(&obj->ob_spec));
+        fprintf(fp, "#else\n");
+        fprintf(fp,"     { (LONG)&%srs_iconblk[%ld + %sRS_IB_OFFSET] },\n", prefix,
+                get_offset(&obj->ob_spec), prefix);
+        fprintf(fp, "#endif\n");
         break;
     default:
-        fprintf(fp,"{ (LONG)%ldL }, /* generate number for unknown ob_type 0x%02x */\n",
+        fprintf(fp,"     { (LONG)%ldL }, /* generate number for unknown ob_type 0x%02x */\n",
                 get_offset(&obj->ob_spec),type);
         break;
     }
@@ -2737,7 +3445,15 @@ PRIVATE void display_header(void)
     printf("  %5d BITBLKs\n",rsh.nbb);                      /* number of blt blocks */
     printf("  %5d free strings\n",rsh.nstring);             /* number of free strings */
     printf("  %5d free images\n",rsh.nimages);              /* number of free images */
-    printf("  Resource size %5d bytes\n\n",rsh.rssize);     /* total bytes in resource */
+    if (rsh.vrsn & NEWRSC_FORMAT)
+    {
+    printf("  %5d CICONBLKs\n",rsh.num_ciconblks);          /* number of color icons */
+    printf("  %5d CICONs\n",rsh.num_cicons);                /* number of color icons */
+    printf("  Resource palette %s\n",rsh.offset_palette ? "Yes" : "No");
+    }
+    printf("  Resource size %5d bytes\n",rsh.rssize);       /* total bytes in resource */
+    printf("  Resource filesize %ld bytes\n",rsh.filesize); /* total size of file */
+    printf("\n");
 }
 
 /*
@@ -2850,6 +3566,7 @@ SHARED_ENTRY *e;
 char temp[MAX_STRLEN];
 char *base = (char *)rschdr;
 char *obj_base, *p;
+int ciconnum;
 
     /*
      *  examine all the objects from the start of the table to
@@ -2864,6 +3581,7 @@ char *obj_base, *p;
      *  table entry with the lowest-numbered object referencing it.
      */
     obj_base = base + rsh.object;
+    ciconnum = 0;
     for (obj = (OBJECT *)obj_base, n = 0; obj < (OBJECT *)obj_base+conditional_object_start; obj++, n++) {
         switch(get_ushort(&obj->ob_type)&0xff) {
         case G_STRING:
@@ -2892,6 +3610,26 @@ char *obj_base, *p;
                     e->objnum = n;
             }
             break;
+        case G_CICON:
+            n = get_offset(&obj->ob_spec);
+            if (n < 0 || n >= rsh.num_ciconblks)
+                error("invalid color icon index", inrsc);
+            {
+                CICONBLK *ciconblk;
+                unsigned int res;
+
+                ciconblk = get_ciconblk(base, n);
+                res = get_offset(&ciconblk->mainlist);
+                while (res != 0)
+                {
+                    CICON *cicon = (CICON *)(base + res);
+                    if (ciconnum >= rsh.num_cicons)
+                        error("internal error: too many cicons", NULL);
+                    ciconnum++;
+                    res = get_offset(&cicon->next_res);
+                }
+            }
+            break;
         }
     }
 
@@ -2916,6 +3654,28 @@ char *obj_base, *p;
             n = (get_offset(&obj->ob_spec) - rsh.iconblk) / sizeof(ICONBLK);
             iconblk_status[n] = 1;
             break;
+        case G_CICON:
+            n = get_offset(&obj->ob_spec);
+            if (n < 0 || n >= rsh.num_ciconblks)
+                error("invalid color icon index", inrsc);
+            ciconblk_status[n] = 1;
+            {
+                CICONBLK *ciconblk;
+                unsigned int res;
+
+                ciconblk = get_ciconblk(base, n);
+                res = get_offset(&ciconblk->mainlist);
+                while (res != 0)
+                {
+                    CICON *cicon = (CICON *)(base + res);
+                    if (ciconnum >= rsh.num_cicons)
+                        error("internal error: too many cicons", NULL);
+                    cicon_status[ciconnum] = 1;
+                    ciconnum++;
+                    res = get_offset(&cicon->next_res);
+                }
+            }
+            break;
         }
     }
 
@@ -2925,6 +3685,8 @@ char *obj_base, *p;
     conditional_tedinfo_start = scan_conditional(tedinfo_status,rsh.nted);
     conditional_bitblk_start = scan_conditional(bitblk_status,rsh.nbb);
     conditional_iconblk_start = scan_conditional(iconblk_status,rsh.nib);
+    conditional_ciconblk_start = scan_conditional(ciconblk_status,rsh.num_ciconblks);
+    conditional_cicon_start = scan_conditional(cicon_status,rsh.num_cicons);
 }
 
 /*
@@ -3003,6 +3765,10 @@ PRIVATE int init_all_status(MY_RSHDR *hdr)
         return -1;
     if (init_status(&iconblk_status,hdr->nib) < 0)
         return -1;
+    if (init_status(&ciconblk_status,hdr->num_ciconblks) < 0)
+        return -1;
+    if (init_status(&cicon_status,hdr->num_cicons) < 0)
+        return -1;
 
     return 0;
 }
@@ -3041,6 +3807,17 @@ PRIVATE unsigned short get_ushort(USHORT *p)
 PRIVATE unsigned long get_offset(OFFSET *p)
 {
     return ((unsigned int)p->b1<<24) | ((unsigned int)p->b2<<16) | ((unsigned int)p->b3<<8) | (unsigned int)p->b4;
+}
+
+/*
+ *  convert unsigned long offset to big-endian
+ */
+PRIVATE void put_offset(OFFSET *p, unsigned long val)
+{
+    p->b1 = (val >> 24) & 0xff;
+    p->b2 = (val >> 16) & 0xff;
+    p->b3 = (val >>  8) & 0xff;
+    p->b4 = (val      ) & 0xff;
 }
 
 /*
