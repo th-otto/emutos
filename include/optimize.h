@@ -10,6 +10,11 @@
 #ifndef OPTIMIZE_H
 #define OPTIMIZE_H
 
+#if CONF_WITH_WINDOW_COLORS
+extern WORD desktop_colors[3];     /* desktop colors & backgrounds */
+extern WORD window_colors[3];      /* window colors & backgrounds */
+#endif
+
 WORD sound(WORD isfreq, WORD freq, WORD dura);
 void fmt_str(BYTE *instr, BYTE *outstr);
 void unfmt_str(BYTE *instr, BYTE *outstr);

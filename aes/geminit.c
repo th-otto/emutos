@@ -267,6 +267,20 @@ static void sh_init(void)
     /* set defaults */
     psh = sh;
     psh->sh_doexec = psh->sh_dodef = gl_shgem = psh->sh_isgem = TRUE;
+
+#if CONF_WITH_WINDOW_COLORS
+    /*
+     * use gl_nplanes to determine resolution, and set
+     * the desktop background and color from the values we read from
+     * emudesk.inf
+     */
+    {
+        int i;
+
+        i = gl_nplanes == 1 ? 0 : gl_nplanes == 2 ? 1 : 2;
+        tree[ROOT].ob_spec.index = 0x1100 | desktop_colors[i];
+    }
+#endif
 }
 
 
@@ -351,9 +365,11 @@ static void process_inf1(void)
 /*
  *  Part 2 of early emudesk.inf processing
  *
- *  This has two functions:
+ *  This has three functions:
  *      1. Determine the auto-run program to be started (from #Z).
  *      2. Set the double-click speed (from #E).  This is done here
+ *         in case we have an auto-run program.
+ *      3. Set the desktop and window colors (from #Q).  This is done here
  *         in case we have an auto-run program.
  *
  *  Returns:
@@ -366,6 +382,15 @@ static BOOL process_inf2(void)
     WORD    env, isgem = TRUE;
     char    *pcurr;
     BYTE    tmp;
+
+#if CONF_WITH_WINDOW_COLORS
+    desktop_colors[0] = (IP_4PATT << 4) | BLACK;
+    desktop_colors[1] = (IP_SOLID << 4) | GREEN;
+    desktop_colors[2] = (IP_SOLID << 4) | GREEN;
+    window_colors[0] = (IP_SOLID << 4) | WHITE;
+    window_colors[1] = (IP_SOLID << 4) | WHITE;
+    window_colors[2] = (IP_SOLID << 4) | WHITE;
+#endif
 
     pcurr = infbuf;
     while (*pcurr)
@@ -401,6 +426,20 @@ static BOOL process_inf2(void)
 
             ++pcurr;
         }
+
+#if CONF_WITH_WINDOW_COLORS
+        else if (tmp == 'Q')
+        {
+            int i;
+
+            pcurr++;
+            for (i = 0; i < 3; i++)
+            {
+                pcurr = scan_2(pcurr, &desktop_colors[i]);
+                pcurr = scan_2(pcurr, &window_colors[i]);
+            }
+        }
+#endif
     }
 
     return isgem ? TRUE : FALSE;

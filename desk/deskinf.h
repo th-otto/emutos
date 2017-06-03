@@ -17,5 +17,8 @@ WORD inf_disk(BYTE dr_id);
 void inf_numset(OBJECT *tree, WORD obj, ULONG value);
 WORD inf_pref(void);
 WORD opn_appl(BYTE *papname, BYTE *ptail);
+#if CONF_WITH_WINDOW_COLORS
+WORD inf_colors(void);
+#endif
 
 #endif  /* _DESKINF_H */

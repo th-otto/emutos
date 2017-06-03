@@ -596,6 +596,29 @@ static WORD app_rdicon(void)
 }
 
 
+#if CONF_WITH_WINDOW_COLORS
+void set_window_colors(BOOL put)
+{
+    int i, j;
+    OBJECT *tree;
+
+    i = gl_nplanes == 1 ? 0 : gl_nplanes == 2 ? 1 : 2;
+    if (G.g_screen)
+    {
+        if (put)
+        {
+            for (j = DROOT+1, tree = G.g_screen+j; j < WOBS_START; j++, tree++)
+                tree->ob_spec.index = window_colors[i];
+            G.g_screen[DROOT].ob_spec.index = desktop_colors[i];
+        } else {
+            window_colors[i] = G.g_screen[DROOT+1].ob_spec.index;
+            desktop_colors[i] = G.g_screen[DROOT].ob_spec.index;
+        }
+    }
+}
+#endif
+
+
 /*
  *  Initialize the application list by reading in the EMUDESK.INF
  *  file, either from memory or from the disk if the shel_get
@@ -801,6 +824,11 @@ void app_start(void)
             if (envr & INF_E5_NOSORT)
                 G.g_cnxsave.cs_sort = CS_NOSORT;
             break;
+#if CONF_WITH_WINDOW_COLORS
+        case 'Q':                       /* window & desktop colors & patterns */
+            /* parsing was already done by AES */
+            break;
+#endif
         }
     }
 
@@ -994,6 +1022,15 @@ void app_save(WORD todisk)
         pcurr += sprintf(pcurr," %s@\r\n",(*ptmp!='@')?ptmp:"");
     }
 
+#if CONF_WITH_WINDOW_COLORS
+    /* save window colors */
+    set_window_colors(FALSE);
+    pcurr += sprintf(pcurr,"#Q %02X %02X %02X %02X %02X %02X\r\n",
+        desktop_colors[0], window_colors[0],
+        desktop_colors[1], window_colors[1],
+        desktop_colors[2], window_colors[2]);
+#endif
+
     /*
      * reverse the ANODE list before we write it.  this ensures
      * that the generic ANODEs are written ahead of the ones
@@ -1087,12 +1124,18 @@ void app_blddesk(void)
     OBJECT *pob;
     SCREENINFO *si;
     ICONBLK *pic;
-    LONG *ptr;
 
     /* free all this window's kids and set size  */
     obj_wfree(DROOT, 0, 0, gl_width, gl_height);
-    ptr = (LONG *)&global[3];
+#if CONF_WITH_WINDOW_COLORS
+    set_window_colors(TRUE);
+#else
+    {
+    LONG *ptr;
+    ptr = (LONG *)&global[3]; /* ap_private member of global */
     G.g_screen[DROOT].ob_spec.index = *ptr;
+    }
+#endif
 
     for(pa = G.g_ahead; pa; pa = pa->a_next)
     {

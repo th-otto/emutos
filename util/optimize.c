@@ -26,6 +26,11 @@
 #include "xbiosbind.h"
 
 
+#if CONF_WITH_WINDOW_COLORS
+WORD desktop_colors[3];     /* desktop colors & backgrounds */
+WORD window_colors[3];      /* window colors & backgrounds */
+#endif
+
 /*
  *  sound() - an internal routine used by the AES and desktop
  *

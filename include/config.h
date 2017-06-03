@@ -1016,6 +1016,13 @@
 #endif
 
 /*
+ * Set CONF_WITH_WINDOW_COLORS to 1 to enable support for desktop/window colors
+ */
+#ifndef CONF_WITH_WINDOW_COLORS
+# define CONF_WITH_WINDOW_COLORS 1
+#endif
+
+/*
  * Set CONF_WITH_PCGEM to 1 to support various PC-GEM-compatible AES functions
  */
 #ifndef CONF_WITH_PCGEM

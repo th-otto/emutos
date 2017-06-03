@@ -460,6 +460,12 @@ static WORD do_viewmenu(WORD item)
     case NSRTITEM:
         newsort = S_NSRT;
         break;
+#if CONF_WITH_WINDOW_COLORS
+    case BACKGRND:
+        if (inf_colors())
+            desk_all(FALSE);
+        return 0;
+#endif
     }
 
     if (newview != G.g_iview)

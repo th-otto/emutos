@@ -143,4 +143,8 @@ ANODE *app_afind_by_id(WORD obid);
 ANODE *app_afind_by_name(WORD atype, WORD ignore, BYTE *pspec, BYTE *pname, WORD *pisapp);
 void nomem_alert(void);
 
+#if CONF_WITH_WINDOW_COLORS
+void set_window_colors(BOOL put);
+#endif
+
 #endif  /* _DESKAPP_H */

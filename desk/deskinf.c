@@ -299,7 +299,11 @@ static WORD dr_fnode(UWORD last_state, UWORD curr_state, WORD x, WORD y,
     else
     {
         len = format_fnode(fnode, temp);    /* convert to text */
+#if CONF_WITH_WINDOW_COLORS
+        gsx_attr(TRUE, MD_TRANS, BLACK);
+#else
         gsx_attr(TRUE, MD_REPLACE, BLACK);
+#endif
         expand_string(intin, temp);
         gsx_tblt(IBM, x, y, len);
         gsx_attr(FALSE, MD_XOR, BLACK);
@@ -769,3 +773,90 @@ WORD opn_appl(BYTE *papname, BYTE *ptail)
 
     return FALSE;
 }
+
+
+#if CONF_WITH_WINDOW_COLORS
+/*
+ * Handle color & style dialog
+ */
+WORD inf_colors(void)
+{
+    OBJECT *tree;
+    WORD ret;
+    LONG newwin;
+    LONG newdesk;
+    LONG *outpat;
+    WORD i;
+    WORD maxcolor;
+
+    tree = G.a_trees[ADBKGND];
+
+    newdesk = G.g_screen[DROOT].ob_spec.index;
+    newwin = G.g_screen[DROOT+1].ob_spec.index;
+    /* set the background pattern */
+    ret = tree[DESKPREF].ob_state & SELECTED ? DESKPREF : WINPREF;
+
+    maxcolor = gl_nplanes == 1 ? 2 : gl_nplanes == 2 ? 4 : 16;
+    for (i = maxcolor; i < 16; i++)
+        tree[COLOR0 + i].ob_flags |= HIDETREE;
+
+    show_hide(FMD_START, tree);
+
+    outpat = NULL; /* quiet compiler */
+    for (;;)
+    {
+        if (ret == DESKPREF)
+        {
+            outpat = &newdesk;
+        }
+        if (ret == WINPREF)
+        {
+            outpat = &newwin;
+        }
+        tree[PATTERN].ob_spec.index = *outpat;
+
+        if (ret >= PATTERN0 && ret <= PATTERN7)
+        {
+            tree[PATTERN].ob_spec.index &= 0xFFFFFF0FL;
+            tree[PATTERN].ob_spec.index |= tree[ret].ob_spec.index & 0x000000F0L;
+        } else if (ret >= COLOR0 && ret <= COLOR15)
+        {
+            tree[PATTERN].ob_spec.index &= 0xFFFFFF0FL;
+            tree[PATTERN].ob_spec.index |= tree[ret].ob_spec.index & 0x0000000FL;
+        }
+
+        draw_fld(tree, OUTBOX);
+        *outpat = tree[PATTERN].ob_spec.index;
+
+        ret = form_do(tree, ROOT);
+        if (ret == SCOK || ret == SCCANCEL)
+        {
+            tree[ret].ob_state &= ~SELECTED;
+            ret = ret == SCOK;
+            break;
+        }
+    }
+
+    show_hide(FMD_FINISH, tree);
+
+    if (ret)
+    {
+        if (G.g_screen[DROOT].ob_spec.index != newdesk)
+        {
+            G.g_screen[DROOT].ob_spec.index = newdesk;
+            do_wredraw(0, G.g_xdesk, G.g_ydesk, G.g_wdesk, G.g_hdesk);
+        }
+
+        if (G.g_screen[DROOT+1].ob_spec.index != newwin)
+        {
+            i = gl_nplanes == 1 ? 0 : gl_nplanes == 2 ? 1 : 2;
+            window_colors[i] = newwin;
+            set_window_colors(TRUE);
+        } else
+        {
+            ret = FALSE;
+        }
+    }
+    return ret;
+}
+#endif
