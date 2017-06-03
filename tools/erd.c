@@ -1829,6 +1829,10 @@ PRIVATE int write_include(FILE *fp,char *name)
 #ifdef ICON_RSC
     fprintf(fp,"#include \"deskapp.h\"\n");
 #endif
+#ifdef DESK_RSC
+    fprintf(fp,"#include \"deskbind.h\"\n");
+    fprintf(fp,"#include \"deskglob.h\"\n");
+#endif
     fprintf(fp,"#include \"%s.h\"\n",name);
     fprintf(fp,"#include \"nls.h\"\n\n");
 
@@ -2774,6 +2778,7 @@ PRIVATE int write_c_epilogue(FILE *fp)
     fprintf(fp,"    memcpy(%srs_obj, %srs_obj_rom, RS_NOBS * sizeof(OBJECT));\n",prefix,prefix);
     fprintf(fp,"    memcpy(%srs_tedinfo, %srs_tedinfo_rom,\n",prefix,prefix);
     fprintf(fp,"           RS_NTED * sizeof(TEDINFO));\n");
+    fprintf(fp,"    memcpy(G.a_trees, %srs_trees,RS_NTREE * sizeof(OBJECT *));\n",prefix);
     fprintf(fp,"}\n\n");
 #endif
 #ifdef GEM_RSC

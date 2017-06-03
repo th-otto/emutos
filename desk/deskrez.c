@@ -171,7 +171,7 @@ WORD oldmode, oldbase, oldoptions;
 
     if (VgetMonitor() != MON_VGA) { /* fix up rez descriptions if not VGA */
         for (i = 0, obj = tree+FREZNAME; i < 4; i++, obj++)
-            rsrc_gaddr_rom(R_STRING,STREZ1+i,(void **)&obj->ob_spec);
+            obj->ob_spec.free_string = ini_str(STREZ1+i);
     }
 
     /* FIXME: change the next 2 lines when we have TrueColor support in VDI */

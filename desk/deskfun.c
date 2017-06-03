@@ -41,6 +41,7 @@
 #include "deskfun.h"
 #include "deskins.h"
 #include "deskpro.h"
+#include "deskrsrc.h"
 #include "biosdefs.h"
 
 #include "string.h"
@@ -64,7 +65,7 @@ static BOOL exit_desktop;
  */
 WORD fun_alert(WORD defbut, WORD stnum)
 {
-    rsrc_gaddr_rom(R_STRING, stnum, (void **)&G.a_alert);
+    G.a_alert = ini_str(stnum);
     return form_alert(defbut, G.a_alert);
 }
 
@@ -74,7 +75,7 @@ WORD fun_alert(WORD defbut, WORD stnum)
  */
 WORD fun_alert_merge(WORD defbut, WORD stnum, BYTE merge)
 {
-    rsrc_gaddr_rom(R_STRING, stnum, (void **)&G.a_alert);
+    G.a_alert = ini_str(stnum);
     sprintf(G.g_1text, G.a_alert, merge);
 
     return form_alert(defbut, G.g_1text);
@@ -87,7 +88,7 @@ WORD fun_alert_merge(WORD defbut, WORD stnum, BYTE merge)
  */
 WORD fun_alert_long(WORD defbut, WORD stnum, LONG merge)
 {
-    rsrc_gaddr_rom(R_STRING, stnum, (void **)&G.a_alert);
+    G.a_alert = ini_str(stnum);
     sprintf(G.g_1text, G.a_alert, merge);
 
     return form_alert(defbut, G.g_1text);
@@ -101,7 +102,7 @@ WORD fun_alert_long(WORD defbut, WORD stnum, LONG merge)
  */
 WORD fun_alert_string(WORD defbut, WORD stnum, BYTE *merge)
 {
-    rsrc_gaddr_rom(R_STRING, stnum, (void **)&G.a_alert);
+    G.a_alert = ini_str(stnum);
     sprintf(G.g_1text, G.a_alert, merge);
 
     return form_alert(defbut, G.g_1text);

@@ -623,7 +623,7 @@ void win_sinfo(WNODE *pwin)
     PNODE *pn;
 
     pn = pwin->w_path;
-    rsrc_gaddr_rom(R_STRING, STINFOST, (void **)&G.a_alert);
+    G.a_alert = ini_str(STINFOST);
     strlencpy(G.g_1text, G.a_alert);
 
     sprintf(pwin->w_info, G.g_1text, pn->p_size, pn->p_count);

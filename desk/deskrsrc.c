@@ -25,13 +25,11 @@
 #include "aesbind.h"
 #include "gembind.h"
 #include "deskrsrc.h"
+#include "desk_rsc.h"
 #include "kprint.h"
 
 
 BYTE *ini_str(WORD stnum)
 {
-    BYTE *str;
-
-    rsrc_gaddr_rom(R_STRING, stnum, (void **)&str);
-    return str;
+    return CONST_CAST(BYTE *, desk_rs_fstr[stnum]);
 }

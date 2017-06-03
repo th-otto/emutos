@@ -1444,7 +1444,7 @@ void centre_title(OBJECT *root)
  */
 static void desk_xlate_fix(void)
 {
-    OBJECT *tree = desk_rs_trees[ADDINFO];
+    OBJECT *tree = G.a_trees[ADDINFO];
     OBJECT *objlabel = &tree[DELABEL];
     OBJECT *objversion = &tree[DEVERSN];
     OBJECT *objyear = &tree[DECOPYRT];
@@ -1469,7 +1469,7 @@ static void desk_xlate_fix(void)
     objyear->ob_spec.free_string = CONST_CAST(char *, COPYRIGHT_YEAR);
 
     /* adjust the size and coordinates of menu items */
-    adjust_menu(desk_rs_trees[ADMENU]);
+    adjust_menu(G.a_trees[ADMENU]);
 
     /* Fix objects coordinates: */
     for(i = 0 ; i < RS_NOBS ; i++)
@@ -1486,29 +1486,6 @@ static void desk_xlate_fix(void)
      */
     align_objects(desk_rs_obj, RS_NOBS);
 }
-
-/* Fake a rsrc_gaddr for the ROM desktop: */
-WORD rsrc_gaddr_rom(WORD rstype, WORD rsid, void **paddr)
-{
-    switch(rstype)
-    {
-    case R_TREE:
-        *paddr = desk_rs_trees[rsid];
-        break;
-    case R_BITBLK:
-        *paddr = (void **)&desk_rs_bitblk[rsid];
-        break;
-    case R_STRING:
-        *paddr = (void **)gettext( desk_rs_fstr[rsid] );
-        break;
-    default:
-        KDEBUG(("rsrc_gaddr_rom(): unsupported resource type!\n"));
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
 
 WORD deskmain(void)
 {
@@ -1541,12 +1518,11 @@ WORD deskmain(void)
     /* initialize menus and dialogs */
     for (ii = 0; ii < RS_NTREE; ii++)
     {
-        rsrc_gaddr_rom(R_TREE, ii, (void **)&G.a_trees[ii]);
         centre_title(G.a_trees[ii]);
     }
 
-    rsrc_gaddr_rom(R_STRING, STASTEXT, (void **)&ad_ptext);
-    rsrc_gaddr_rom(R_STRING, STASICON, (void **)&ad_picon);
+    ad_ptext = ini_str(STASTEXT);
+    ad_picon = ini_str(STASICON);
 
     /* These strings are used by dr_code.  We can't get to the
      * resource in dr_code because that would reenter AES, so we
