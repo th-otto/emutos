@@ -340,7 +340,11 @@ void win_bldview(WNODE *pwin, WORD x, WORD y, WORD w, WORD h)
 
         /* build object */
         obj = &G.g_screen[obid];
+#if CONF_WITH_COLORICONS
+        obj->ob_state = NORMAL;
+#else
         obj->ob_state = WHITEBAK /*| DRAW3D*/;
+#endif
         obj->ob_flags = 0x00;
         si = &G.g_screeninfo[obid];
         switch(G.g_iview)
