@@ -27,9 +27,10 @@
 #include "deskrsrc.h"
 #include "desk_rsc.h"
 #include "kprint.h"
+#include "nls.h"
 
 
 BYTE *ini_str(WORD stnum)
 {
-    return CONST_CAST(BYTE *, desk_rs_fstr[stnum]);
+    return CONST_CAST(BYTE *, gettext(desk_rs_fstr[stnum]));
 }
